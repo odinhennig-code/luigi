@@ -21,6 +21,6 @@ Die Schlüssel bleiben nur auf dem eigenen PC gespeichert.
 
 ## Aufbau
 
-- `index.html` – die Oberfläche (Chat, Modelle, Einstellungen)
+- `index.html` – die Oberfläche (Chat, Planungsmodus mit Whiteboard, Modelle, Einstellungen)
 - `app/` – das Windows-Programm drumherum
 - `.github/workflows/build.yml` – baut die Luigi.exe automatisch

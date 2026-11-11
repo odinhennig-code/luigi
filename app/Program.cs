@@ -117,20 +117,20 @@ namespace Luigi
         // ---------- Aufträge vom Chat auf dem PC ausführen ----------
         async void OnMessage(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
-            string id = "", typ = "", ort = "", name = "";
+            string id = "", typ = "", ort = "", name = "", url = "", inhalt = "", neu = "";
             try
             {
                 using var doc = JsonDocument.Parse(e.TryGetWebMessageAsString());
                 var r = doc.RootElement;
                 string Get(string k) => r.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : "";
-                id = Get("id"); typ = Get("typ"); ort = Get("ort"); name = Get("name");
+                id = Get("id"); typ = Get("typ"); ort = Get("ort"); name = Get("name"); url = Get("url"); inhalt = Get("inhalt"); neu = Get("neu");
             }
             catch { return; }
 
             if (typ == "update_installieren") { await InstallUpdate(); return; }
 
             (bool ok, string msg) result;
-            try { result = await Task.Run(() => Run(typ, ort, name)); }
+            try { result = await Task.Run(() => Run(typ, ort, name, url, inhalt, neu)); }
             catch (Exception ex) { result = (false, "Fehler: " + ex.Message); }
 
             var json = JsonSerializer.Serialize(new { id, ok = result.ok, msg = result.msg });
@@ -174,11 +174,98 @@ namespace Luigi
             { "Archive", new[] { ".zip", ".rar", ".7z", ".tar", ".gz" } },
         };
 
-        static (bool, string) Run(string typ, string ort, string name)
+        static readonly string[] Blocked = { ".exe", ".bat", ".cmd", ".ps1", ".vbs", ".js", ".jse", ".wsf", ".lnk", ".url", ".reg", ".msi", ".scr", ".com", ".dll", ".sys", ".hta", ".cpl" };
+
+        static (bool, string) FindProgram(string name)
         {
+            var builtin = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "rechner", "calc.exe" }, { "taschenrechner", "calc.exe" }, { "calculator", "calc.exe" },
+                { "editor", "notepad.exe" }, { "notepad", "notepad.exe" }, { "paint", "mspaint.exe" },
+                { "explorer", "explorer.exe" }, { "datei-explorer", "explorer.exe" }, { "dateiexplorer", "explorer.exe" },
+                { "task-manager", "taskmgr.exe" }, { "taskmanager", "taskmgr.exe" }, { "einstellungen", "ms-settings:" },
+                { "eingabeaufforderung", "cmd.exe" }, { "cmd", "cmd.exe" }, { "terminal", "wt.exe" },
+                { "snipping tool", "ms-screenclip:" }, { "kamera", "microsoft.windows.camera:" }, { "uhr", "ms-clock:" }
+            };
+            if (builtin.TryGetValue(name.Trim(), out var cmd))
+            {
+                Process.Start(new ProcessStartInfo(cmd) { UseShellExecute = true });
+                return (true, $"**{name}** ist geöffnet.");
+            }
+            var dirs = new[]
+            {
+                Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu),
+                Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory)
+            };
+            var opt = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
+            string q = name.Trim().ToLowerInvariant(), best = null; int bestScore = 99;
+            foreach (var d in dirs.Where(Directory.Exists))
+                foreach (var f in Directory.EnumerateFiles(d, "*.*", opt))
+                {
+                    var ext = Path.GetExtension(f).ToLowerInvariant();
+                    if (ext != ".lnk" && ext != ".url" && ext != ".appref-ms") continue;
+                    var n = Path.GetFileNameWithoutExtension(f).ToLowerInvariant();
+                    if (n.Contains("uninstall") || n.Contains("deinstall") || n.Contains("hilfe") || n.Contains("help")) continue;
+                    int score = n == q ? 0 : n.StartsWith(q) ? 1 : n.Contains(q) ? 2 : 99;
+                    if (score < bestScore || (score == bestScore && best != null && n.Length < Path.GetFileNameWithoutExtension(best).Length)) { bestScore = score; best = f; }
+                }
+            if (best == null) return (false, $"Ich habe kein Programm namens **{name}** gefunden.");
+            Process.Start(new ProcessStartInfo(best) { UseShellExecute = true });
+            return (true, $"**{Path.GetFileNameWithoutExtension(best)}** ist geöffnet.");
+        }
+
+        static (bool, string) Run(string typ, string ort, string name, string url, string inhalt, string neu)
+        {
+            if (typ == "webseite_oeffnen")
+            {
+                if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || (uri.Scheme != "https" && uri.Scheme != "http")) return (false, "Diese Adresse kann ich nicht öffnen.");
+                Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+                return (true, $"**{uri.Host}** ist geöffnet.");
+            }
+            if (typ == "programm_oeffnen")
+            {
+                if (string.IsNullOrWhiteSpace(name)) return (false, "Welches Programm denn?");
+                return FindProgram(name);
+            }
             string path = Target(ort, name, out string shown);
             switch (typ)
             {
+                case "datei_erstellen":
+                {
+                    if (string.IsNullOrWhiteSpace(name)) return (false, "Die Datei braucht einen Namen.");
+                    var ext = Path.GetExtension(path).ToLowerInvariant();
+                    if (ext == "") { path += ".txt"; shown += ".txt"; ext = ".txt"; }
+                    if (Blocked.Contains(ext)) return (false, $"Dateien mit **{ext}** lege ich aus Sicherheitsgründen nicht an.");
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                    string final = path; int n = 2;
+                    while (File.Exists(final)) final = Path.Combine(Path.GetDirectoryName(path), $"{Path.GetFileNameWithoutExtension(path)} ({n++}){ext}");
+                    File.WriteAllText(final, inhalt ?? "", new UTF8Encoding(false));
+                    return (true, $"Die Datei **{Path.GetFileName(final)}** ist angelegt.");
+                }
+
+                case "umbenennen":
+                {
+                    var invalid = Path.GetInvalidFileNameChars();
+                    var clean = new string((neu ?? "").Where(c => !invalid.Contains(c)).ToArray()).Trim().TrimEnd('.');
+                    if (clean.Length == 0) return (false, "Der neue Name fehlt.");
+                    var dest = Path.Combine(Path.GetDirectoryName(path), clean);
+                    if (File.Exists(path))
+                    {
+                        if (Blocked.Contains(Path.GetExtension(dest).ToLowerInvariant()) && !Blocked.Contains(Path.GetExtension(path).ToLowerInvariant())) return (false, "Diese Endung vergebe ich nicht.");
+                        if (File.Exists(dest) || Directory.Exists(dest)) return (false, $"**{clean}** gibt es dort schon.");
+                        File.Move(path, dest);
+                    }
+                    else if (Directory.Exists(path))
+                    {
+                        if (File.Exists(dest) || Directory.Exists(dest)) return (false, $"**{clean}** gibt es dort schon.");
+                        Directory.Move(path, dest);
+                    }
+                    else return (false, $"**{shown}** gibt es nicht.");
+                    return (true, $"Heißt jetzt **{clean}**.");
+                }
+
                 case "ordner_anlegen":
                     if (string.IsNullOrWhiteSpace(name)) return (false, "Der Ordner braucht einen Namen.");
                     if (Directory.Exists(path)) return (true, $"Den Ordner **{shown}** gibt es schon.");
