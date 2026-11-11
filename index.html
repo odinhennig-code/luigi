@@ -347,6 +347,22 @@ svg{display:block}
 .key input:focus{border-color:var(--g2);background:var(--bg)}
 .keys-note{font-style:normal;font-size:12px;color:var(--faint)}
 .sheet{max-height:calc(100% - 32px);overflow-y:auto}
+
+.action{flex-direction:column;align-items:stretch;gap:0}
+.arow{display:flex;align-items:center;gap:14px}
+.btns{margin-left:auto;display:flex;gap:6px;flex:none}
+.cbtn{font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;transition:transform .15s var(--ease),background .2s,box-shadow .2s}
+.cbtn:active{transform:scale(.93)}
+.cbtn.no{background:var(--surface);color:var(--muted)}
+.cbtn.no:hover{background:var(--hover);color:var(--ink)}
+.cbtn.yes{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--g2) 35%,transparent)}
+.cbtn.yes:hover{box-shadow:0 6px 20px color-mix(in srgb,var(--g2) 50%,transparent)}
+.action .state.ok{background:color-mix(in srgb,var(--g5) 18%,transparent);color:color-mix(in srgb,var(--g5) 70%,var(--ink))}
+.action .state.bad{background:color-mix(in srgb,var(--g3) 18%,transparent);color:color-mix(in srgb,var(--g3) 75%,var(--ink))}
+.cres{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);max-height:220px;overflow:auto}
+.cres ul{margin:0;padding-left:18px}
+.cres p{margin:0 0 6px}
+.status.ok{background:color-mix(in srgb,var(--g5) 18%,transparent);color:color-mix(in srgb,var(--g5) 70%,var(--ink))}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
 </style>
 </head>
@@ -469,8 +485,8 @@ svg{display:block}
       <i class="keys-note">Die Schlüssel bleiben nur auf diesem PC gespeichert.</i>
     </div>
     <div class="row">
-      <div><b>Dein PC</b><i>Damit Luigi Ordner anlegen und am PC arbeiten kann</i></div>
-      <span class="status">Noch nicht verbunden</span>
+      <div><b>Dein PC</b><i>Luigi kann Ordner anlegen, öffnen, anzeigen und aufräumen. Er fragt vorher immer.</i></div>
+      <span class="status" id="pcStatus">Nur in der App</span>
     </div>
   </div>
 </div>
@@ -492,7 +508,7 @@ const MODELS=[
   {id:"gem",c:"--g4",name:"Gemini Flash",desc:"Über Google AI Studio",prov:"google",model:"gemini-flash-latest"},
   {id:"own",c:"--g3",name:"Luigi Eigen",desc:"Von dir angelernt",soon:true}
 ];
-let model=MODELS[0];
+let model=MODELS.find(x=>x.id===store.get("luigi-model"))||MODELS[0];
 const IC={
   folder:'<svg class="ico" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
   sort:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
@@ -529,7 +545,21 @@ function md(text){
     flush();return html;
   }).join("");
 }
-const card=c=>`<div class="action blk"><div class="fico">${IC[c.icon]}</div><div style="min-width:0"><b>${esc(c.title)}</b><span>${esc(c.path)}</span></div><div class="state">Wartet auf PC</div></div>`;
+const CARDS=new Map();let cardSeq=0;
+function cardState(c){
+  if(!c.act)return '<div class="state">Beispiel</div>';
+  if(c.status==="done")return '<div class="state ok">Erledigt</div>';
+  if(c.status==="err")return '<div class="state bad">Fehler</div>';
+  if(c.status==="no")return '<div class="state">Abgebrochen</div>';
+  if(c.status==="run")return '<div class="state">Läuft …</div>';
+  return '<div class="btns"><button class="cbtn no" data-c="no">Nein</button><button class="cbtn yes" data-c="yes">Ausführen</button></div>';
+}
+function card(c){
+  if(!c.cid){c.cid="c"+(++cardSeq);CARDS.set(c.cid,c)}
+  const res=c.result?`<div class="cres">${md(c.result)}</div>`:"";
+  return `<div class="action blk" data-cid="${c.cid}"><div class="arow"><div class="fico">${IC[c.icon]}</div><div style="min-width:0"><b>${esc(c.title)}</b><span>${esc(c.path)}</span></div>${cardState(c)}</div>${res}</div>`;
+}
+const cardsHTML=m=>(m.cards||(m.card?[m.card]:[])).map(card).join("");
 const plain=t=>t.replace(/\*\*/g,"");
 let toastT;
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800)}
@@ -574,7 +604,7 @@ function tools(m,animate){
 function addAI(m){
   const d=document.createElement("div");d.className="msg-ai done";
   d.innerHTML=SPARK+'<div class="ai-text"></div>';
-  const box=d.lastChild;box.innerHTML=(m.html||md(m.t)+(m.card?card(m.card):""))+(m.stopped?'<div class="stopped">Du hast die Antwort angehalten.</div>':"");
+  const box=d.lastChild;box.innerHTML=(m.html||md(m.t)+cardsHTML(m))+(m.stopped?'<div class="stopped">Du hast die Antwort angehalten.</div>':"");
   box.appendChild(tools(m,false));thread.appendChild(d);return d;
 }
 
@@ -604,12 +634,12 @@ function respond(reply,row){
   const m={r:"a",t:"",card:null};
   job={d,box,m,timers:[]};
   const started=Date.now();
-  Promise.resolve(reply).then(rp=>{if(!job||job.d!==d)return;m.t=rp.t;m.card=rp.card;
+  Promise.resolve(reply).then(rp=>{if(!job||job.d!==d)return;m.t=rp.t;m.card=rp.card;m.cards=rp.cards;if(rp.via&&rp.via!==model.name)toast("Antwort kam von "+rp.via);
   job.timers.push(setTimeout(()=>{
     d.classList.remove("thinking");
     box.className="ai-text streaming";
-    box.innerHTML=md(m.t)+(m.card?card(m.card):"");
-    const words=wrapWords(box);const cardEl=box.querySelector(".action");
+    box.innerHTML=md(m.t)+cardsHTML(m);
+    const words=wrapWords(box);const cardEls=[...box.querySelectorAll(".action")];const cardEl=cardEls.length;
     job.words=words;
     if(calm()){finish();return}
     let i=0;
@@ -618,7 +648,7 @@ function respond(reply,row){
       for(let k=0;k<n&&i<words.length;k++,i++){words[i].classList.add("on");reveal(words[i],box)}
       if(stick)toEnd(false);
       if(i<words.length)job.timers.push(setTimeout(tick,34));
-      else job.timers.push(setTimeout(()=>{if(cardEl){cardEl.classList.add("shown");if(stick)toEnd(true)}finish()},cardEl?220:120));
+      else job.timers.push(setTimeout(()=>{if(cardEl){cardEls.forEach((c,ix)=>setTimeout(()=>c.classList.add("shown"),ix*120));if(stick)toEnd(true)}finish()},cardEl?220:120));
     };
     tick();
   },calm()?0:Math.max(0,900-(Date.now()-started))));
@@ -651,50 +681,97 @@ function regenerate(row){
   current.msgs.splice(idx);respond(getReply(q.t),row);
 }
 
+/* ---------- PC-Verbindung (nur in der Luigi-App) ---------- */
+const HOST=window.chrome&&window.chrome.webview;
+const pending=new Map();let reqSeq=0;
+if(HOST)HOST.addEventListener("message",e=>{const d=e.data||{};const f=pending.get(d.id);if(f){pending.delete(d.id);f(d)}});
+function pc(act){return new Promise(res=>{if(!HOST)return res({ok:false,msg:"Das geht nur in der Luigi-App auf deinem PC."});
+  const id="r"+(++reqSeq);pending.set(id,res);HOST.postMessage(JSON.stringify({id,...act}));
+  setTimeout(()=>{if(pending.has(id)){pending.delete(id);res({ok:false,msg:"Keine Antwort vom PC."})}},20000)})}
+const ACTS={ordner_anlegen:["Ordner anlegen","folder"],ordner_oeffnen:["Ordner öffnen","folder"],dateien_auflisten:["Dateien anzeigen","sort"],aufraeumen:["Ordner aufräumen","sort"]};
+const ORTE=["Desktop","Dokumente","Downloads","Bilder","Musik","Videos"];
+function actCard(a){
+  const t=ACTS[a.typ];if(!t)return null;
+  const ort=ORTE.find(o=>o.toLowerCase()===String(a.ort||"").toLowerCase())||"Desktop";
+  const name=String(a.name||"").replace(/[\\/:*?"<>|]/g,"").replace(/\.\./g,"").trim().slice(0,80);
+  return {icon:t[1],title:t[0],path:name?`${ort} › ${name}`:ort,act:{typ:a.typ,ort,name}};
+}
+thread.addEventListener("click",async e=>{
+  const b=e.target.closest(".cbtn");if(!b)return;
+  const el=b.closest(".action"),c=CARDS.get(el.dataset.cid);if(!c||c.status)return;
+  const swap=()=>{el.querySelector(".arow").lastElementChild.outerHTML=cardState(c);const old=el.querySelector(".cres");if(old)old.remove();if(c.result)el.insertAdjacentHTML("beforeend",`<div class="cres">${md(c.result)}</div>`)};
+  if(b.dataset.c==="no"){c.status="no";swap();return}
+  c.status="run";swap();
+  const r=await pc(c.act);
+  c.status=r.ok?"done":"err";c.result=r.msg||"";swap();
+  if(r.ok&&window.FX)FX.burstFrom(el,24);
+  toast(r.ok?"Erledigt":"Hat nicht geklappt");
+});
+
 /* ---------- Echte KI ---------- */
 const KEYS={groq:"luigi-key-groq",openrouter:"luigi-key-openrouter",google:"luigi-key-google"};
-const SYSTEM="Du bist Luigi, ein freundlicher persönlicher KI-Assistent, der auf dem PC des Nutzers wohnt. Antworte auf Deutsch, klar und eher kurz. Nutze für Listen Zeilen, die mit '- ' beginnen, und **fett** für wichtige Wörter. Du kannst noch keine Aktionen auf dem PC ausführen; sag das ehrlich, wenn jemand danach fragt.";
+const hasKey=m=>!!(m.prov&&(store.get(KEYS[m.prov])||"").trim());
+function system(){
+  let t="Du bist Luigi, ein freundlicher persönlicher KI-Assistent, der als Programm auf dem Windows-PC des Nutzers wohnt. Antworte auf Deutsch, klar und eher kurz. Nutze für Listen Zeilen, die mit '- ' beginnen, und **fett** für wichtige Wörter.";
+  if(HOST)t+=' Du kannst auf dem PC diese Aktionen vorschlagen. Schreib dafür jeweils eine eigene Zeile genau in dieser Form: [[AKTION {"typ":"ordner_anlegen","ort":"Desktop","name":"Schule"}]]. Erlaubte typ: ordner_anlegen (ort, name), ordner_oeffnen (ort, name optional), dateien_auflisten (ort, name optional), aufraeumen (ort, name optional; sortiert lose Dateien in Unterordner nach Art). Erlaubte ort: Desktop, Dokumente, Downloads, Bilder, Musik, Videos. Unterordner gibst du als name an, z. B. "Schule/Mathe". Der Nutzer bestätigt jede Aktion selbst per Klick, sag also nicht, dass sie schon erledigt ist. Schreib vorher einen kurzen Satz, was du vorhast. Löschen kannst du nicht.';
+  else t+=" Aktionen auf dem PC gehen nur in der Luigi-App; sag das ehrlich, wenn jemand danach fragt.";
+  return t;
+}
 function history(){return current.msgs.filter(x=>x.t).slice(-16).map(x=>({role:x.r==="u"?"user":"assistant",content:plain(x.t)}))}
-async function askAI(){
-  const key=(store.get(KEYS[model.prov])||"").trim();
-  if(!key)return null;
-  const msgs=history();
-  try{
-    if(model.prov==="google"){
-      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model.model}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
-        body:JSON.stringify({systemInstruction:{parts:[{text:SYSTEM}]},contents:msgs.map(x=>({role:x.role==="user"?"user":"model",parts:[{text:x.content}]}))})});
-      const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||r.status);
-      return {t:(j.candidates&&j.candidates[0].content.parts.map(p=>p.text).join(""))||"(keine Antwort)"};
+async function call(m,msgs){
+  const key=(store.get(KEYS[m.prov])||"").trim();
+  if(m.prov==="google"){
+    let last;
+    for(const id of [m.model,"gemini-2.5-flash","gemini-2.0-flash"]){
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${id}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
+        body:JSON.stringify({systemInstruction:{parts:[{text:system()}]},contents:msgs.map(x=>({role:x.role==="user"?"user":"model",parts:[{text:x.content}]}))})});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok){const t=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts.map(p=>p.text||"").join("");if(t)return t;last="leere Antwort";continue}
+      last=(j.error&&j.error.message)||("Fehler "+r.status);if(r.status!==404&&r.status!==400)break;
     }
-    const url=model.prov==="groq"?"https://api.groq.com/openai/v1/chat/completions":"https://openrouter.ai/api/v1/chat/completions";
-    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:model.model,messages:[{role:"system",content:SYSTEM},...msgs]})});
-    const j=await r.json();if(!r.ok)throw new Error(j.error&&(j.error.message||j.error)||r.status);
-    return {t:j.choices[0].message.content.trim()};
-  }catch(e){
-    return {t:`Das hat leider nicht geklappt. **${model.name}** meldet: ${String(e.message||e).slice(0,160)}\n\nPrüf in den Einstellungen, ob der Schlüssel stimmt, oder wähl oben ein anderes Modell.`};
+    throw new Error(last);
   }
+  const url=m.prov==="groq"?"https://api.groq.com/openai/v1/chat/completions":"https://openrouter.ai/api/v1/chat/completions";
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key,"X-Title":"Luigi"},body:JSON.stringify({model:m.model,messages:[{role:"system",content:system()},...msgs]})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error((j.error&&(j.error.message||j.error))||("Fehler "+r.status));
+  const t=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+  if(!t)throw new Error("leere Antwort");
+  return t.trim();
 }
-function getReply(text){
-  const s=text.toLowerCase();
-  if(/ordner|aufräum|sortier/.test(s))return makeReply(text);
-  return askAI().then(r=>r||makeReply(text));
+function parseActions(t){
+  const cards=[];
+  const text=t.replace(/\[\[\s*AKTION\s*(\{[\s\S]*?\})\s*\]\]/g,(_,j)=>{try{const c=actCard(JSON.parse(j));if(c)cards.push(c)}catch(e){}return""}).replace(/\n{3,}/g,"\n\n").trim();
+  return {t:text||"Hier ist mein Vorschlag:",cards};
 }
+async function askAI(){
+  const order=[model,...MODELS.filter(x=>x!==model)].filter(hasKey);
+  if(!order.length)return null;
+  const msgs=history();let errs=[];
+  for(const m of order){
+    try{const r=parseActions(await call(m,msgs));r.via=m.name;return r}
+    catch(e){errs.push(`**${m.name}**: ${String(e.message||e).slice(0,140)}`)}
+  }
+  return {t:"Das hat leider bei keinem Modell geklappt:\n"+errs.map(x=>"- "+x).join("\n")+"\n\nPrüf in den Einstellungen, ob die Schlüssel stimmen."};
+}
+function getReply(text){return askAI().then(r=>r||makeReply(text))}
 
-/* Simulierte Antworten (ohne Schlüssel) */
+/* Ohne Schlüssel: einfache eingebaute Antworten */
 function makeReply(q,alt){
   const s=q.toLowerCase();
-  if(/ordner/.test(s)){
+  if(/ordner/.test(s)&&!/aufräum|sortier/.test(s)){
     const m=q.match(/ordner\s+["„]?(.+?)["“]?\s*(?:an|anlegen|erstellen|machen)?[.!?]*\s*$/i);
     const name=m?m[1].replace(/^(namens|mit dem namen)\s+/i,"").trim():"Neuer Ordner";
     const where=/dokument/.test(s)?"Dokumente":/download/.test(s)?"Downloads":"Desktop";
-    return {t:(alt?"Alles klar, ":"Klar! ")+`Ich lege den Ordner **${name}** in **${where}** an. Sobald ich mit deinem PC verbunden bin, erledige ich das sofort.`,card:{icon:"folder",title:"Ordner anlegen",path:`${where} › ${name}`}};
+    return {t:`Klar! Ich lege den Ordner **${name}** in **${where}** an. Klick auf **Ausführen**, dann mache ich es.`,cards:[actCard({typ:"ordner_anlegen",ort:where,name})]};
   }
-  if(/aufräum|sortier/.test(s))return chats[1].msgs[1];
+  if(/aufräum|sortier/.test(s)){
+    const where=ORTE.find(o=>s.includes(o.toLowerCase()))||"Downloads";
+    return {t:`Ich sortiere die losen Dateien in **${where}** in Unterordner wie **Bilder**, **Dokumente** und **Programme**. Gelöscht wird nichts.`,cards:[actCard({typ:"aufraeumen",ort:where})]};
+  }
   if(/was kannst du/.test(s))return chats[2].msgs[1];
-  if(/^(hallo|hi|hey|moin|servus|na)\b/.test(s))return {t:alt?"Hey! Was steht heute an?":"Hallo! Schön, dass du da bist. Gib mir einfach einen Auftrag oder frag mich etwas."};
-  if(/idee/.test(s))return {t:"Sehr gern! Ein paar Fragen zum Start:\n- Soll es eher **lustig**, **gruselig** oder **entspannt** sein?\n- Spielt man **allein** oder **mit Freunden**?\n- Was ist das **Ziel**: sammeln, überleben oder bauen?\n\nErzähl mir, was dir gefällt, dann spinnen wir weiter."};
-  if(/wer bist du|wie heißt du/.test(s))return {t:"Ich bin **Luigi**, dein persönlicher Assistent. Ich wohne auf deinem PC, du kannst mich später auch vom Handy aus steuern."};
-  return {t:`Für **${model.name}** fehlt noch der Schlüssel. Öffne unten links die **Einstellungen** und füge ihn dort ein, dann antworte ich dir richtig.`};
+  if(/^(hallo|hi|hey|moin|servus|na)\b/.test(s))return {t:"Hallo! Schön, dass du da bist. Gib mir einfach einen Auftrag oder frag mich etwas."};
+  return {t:"Mir fehlt noch ein KI-Schlüssel. Öffne unten links die **Einstellungen** und füge einen ein, dann antworte ich dir richtig."};
 }
 
 /* ---------- Senden ---------- */
@@ -766,7 +843,7 @@ function renderMenu(){
     const b=document.createElement("button");
     b.className="opt"+(m.id===model.id?" sel":"");b.disabled=!!m.soon;b.setAttribute("role","menuitemradio");b.setAttribute("aria-checked",m.id===model.id);
     b.innerHTML=`<span class="mdot" style="background:var(${m.c})"></span><div><b>${m.name}</b><i>${m.desc}</i></div>`+(m.soon?'<span class="tag">kommt bald</span>':`<span class="check">${IC.check}</span>`);
-    b.onclick=()=>{model=m;$("#modelName").textContent=m.name;$("#modelDot").style.background=`var(${m.c})`;window.FX&&FX.burstFrom(mbtn,14);closeMenu();toast(m.name+" ausgewählt")};
+    b.onclick=()=>{model=m;store.set("luigi-model",m.id);$("#modelName").textContent=m.name;$("#modelDot").style.background=`var(${m.c})`;window.FX&&FX.burstFrom(mbtn,14);closeMenu();toast(m.name+" ausgewählt")};
     menu.appendChild(b);
   });
 }
@@ -808,6 +885,13 @@ document.addEventListener("keydown",e=>{
   if(!typing&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.length===1&&!scrim.classList.contains("open")&&!menu.classList.contains("open")){input.focus()}
 });
 
+function syncModel(){
+  if(!hasKey(model)){const k=MODELS.find(hasKey);if(k)model=k}
+  $("#modelName").textContent=model.name;$("#modelDot").style.background=`var(${model.c})`;
+  const st=$("#pcStatus");if(st){st.textContent=HOST?"Verbunden":"Nur in der App";st.classList.toggle("ok",!!HOST)}
+}
+document.querySelectorAll(".key input").forEach(i=>i.addEventListener("change",syncModel));
+syncModel();
 renderRecents();setState();
 setTimeout(()=>input.focus({preventScroll:true}),400);
 })();
