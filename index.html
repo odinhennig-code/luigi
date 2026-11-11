@@ -336,6 +336,17 @@ svg{display:block}
 .sub .swd{white-space:nowrap}
 .sub .sch{will-change:transform}
 .spark,.avatar,.mini,.chip,.recent{will-change:transform}
+
+.keys{border-top:1px solid var(--line);padding:14px 0;display:flex;flex-direction:column;gap:10px}
+.keys-h{font-weight:500;font-size:14.5px}
+.key{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.key span{display:flex;justify-content:space-between}
+.key a{color:var(--accent);text-decoration:none;font-weight:500}
+.key a:hover{text-decoration:underline}
+.key input{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1.5px solid transparent;border-radius:12px;padding:9px 12px;outline:none;transition:border-color .2s,background .2s}
+.key input:focus{border-color:var(--g2);background:var(--bg)}
+.keys-note{font-style:normal;font-size:12px;color:var(--faint)}
+.sheet{max-height:calc(100% - 32px);overflow-y:auto}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
 </style>
 </head>
@@ -379,7 +390,7 @@ svg{display:block}
         <span class="brand-name">Luigi</span>
         <div class="model-wrap">
           <button class="model-btn press mag" id="modelBtn" aria-haspopup="menu" aria-expanded="false">
-            <span class="mdot" id="modelDot"></span><span id="modelName">Gemma 4</span>
+            <span class="mdot" id="modelDot" style="background:var(--g5)"></span><span id="modelName">Llama 3.3</span>
             <svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="menu" id="menu" role="menu" aria-label="Modell wählen"></div>
@@ -425,7 +436,7 @@ svg{display:block}
             <button class="chip press" data-q="Hilf mir, Ideen für ein Roblox-Spiel zu sammeln">
               <svg class="ico" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/></svg>Ideen sammeln</button>
           </div>
-          <p class="fine">Luigi ist eine Vorschau. Die Antworten sind noch simuliert.</p>
+          <p class="fine">Luigi kann Fehler machen. Ohne Schlüssel sind die Antworten simuliert.</p>
         </div>
       </div>
     </div>
@@ -450,6 +461,13 @@ svg{display:block}
       <div><b>Animationen</b><i>Weiche Übergänge und Text-Einblenden</i></div>
       <button class="switch" id="motionSw" role="switch" aria-checked="true" aria-label="Animationen"></button>
     </div>
+    <div class="keys">
+      <b class="keys-h">KI-Schlüssel</b>
+      <label class="key"><span>Groq <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Schlüssel holen</a></span><input type="password" id="key-groq" data-k="luigi-key-groq" placeholder="gsk_…" autocomplete="off" spellcheck="false"></label>
+      <label class="key"><span>OpenRouter <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">Schlüssel holen</a></span><input type="password" id="key-or" data-k="luigi-key-openrouter" placeholder="sk-or-…" autocomplete="off" spellcheck="false"></label>
+      <label class="key"><span>Google AI Studio <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Schlüssel holen</a></span><input type="password" id="key-g" data-k="luigi-key-google" placeholder="AIza…" autocomplete="off" spellcheck="false"></label>
+      <i class="keys-note">Die Schlüssel bleiben nur auf diesem PC gespeichert.</i>
+    </div>
     <div class="row">
       <div><b>Dein PC</b><i>Damit Luigi Ordner anlegen und am PC arbeiten kann</i></div>
       <span class="status">Noch nicht verbunden</span>
@@ -469,9 +487,9 @@ const calm=()=>!motion;
 
 /* ---------- Daten ---------- */
 const MODELS=[
-  {id:"gemma",c:"--g1",name:"Gemma 4",desc:"Schnell, gut für den Alltag"},
-  {id:"nemotron",c:"--g5",name:"Nemotron 3",desc:"Stark beim Nachdenken"},
-  {id:"llama",c:"--g4",name:"Llama",desc:"Läuft auch direkt auf deinem PC"},
+  {id:"groq",c:"--g5",name:"Llama 3.3",desc:"Über Groq · sehr schnell",prov:"groq",model:"llama-3.3-70b-versatile"},
+  {id:"or",c:"--g1",name:"Frei-Mix",desc:"Über OpenRouter · kostenlose Modelle",prov:"openrouter",model:"openrouter/free"},
+  {id:"gem",c:"--g4",name:"Gemini Flash",desc:"Über Google AI Studio",prov:"google",model:"gemini-flash-latest"},
   {id:"own",c:"--g3",name:"Luigi Eigen",desc:"Von dir angelernt",soon:true}
 ];
 let model=MODELS[0];
@@ -583,8 +601,10 @@ function respond(reply,row){
   if(!row)thread.appendChild(d);
   stick=true;toEnd(true);
   const box=d.querySelector(".ai-text");
-  const m={r:"a",t:reply.t,card:reply.card};
+  const m={r:"a",t:"",card:null};
   job={d,box,m,timers:[]};
+  const started=Date.now();
+  Promise.resolve(reply).then(rp=>{if(!job||job.d!==d)return;m.t=rp.t;m.card=rp.card;
   job.timers.push(setTimeout(()=>{
     d.classList.remove("thinking");
     box.className="ai-text streaming";
@@ -601,7 +621,8 @@ function respond(reply,row){
       else job.timers.push(setTimeout(()=>{if(cardEl){cardEl.classList.add("shown");if(stick)toEnd(true)}finish()},cardEl?220:120));
     };
     tick();
-  },calm()?0:900));
+  },calm()?0:Math.max(0,900-(Date.now()-started))));
+  });
 }
 function finish(stopped){
   if(!job)return;
@@ -627,10 +648,39 @@ function regenerate(row){
   if(busy||!current)return;
   const idx=+row.dataset.idx;const q=[...current.msgs.slice(0,idx)].reverse().find(x=>x.r==="u");
   if(!q)return;
-  respond(makeReply(q.t,true),row);
+  current.msgs.splice(idx);respond(getReply(q.t),row);
 }
 
-/* Simulierte Antworten (bis ein echtes Modell angeschlossen ist) */
+/* ---------- Echte KI ---------- */
+const KEYS={groq:"luigi-key-groq",openrouter:"luigi-key-openrouter",google:"luigi-key-google"};
+const SYSTEM="Du bist Luigi, ein freundlicher persönlicher KI-Assistent, der auf dem PC des Nutzers wohnt. Antworte auf Deutsch, klar und eher kurz. Nutze für Listen Zeilen, die mit '- ' beginnen, und **fett** für wichtige Wörter. Du kannst noch keine Aktionen auf dem PC ausführen; sag das ehrlich, wenn jemand danach fragt.";
+function history(){return current.msgs.filter(x=>x.t).slice(-16).map(x=>({role:x.r==="u"?"user":"assistant",content:plain(x.t)}))}
+async function askAI(){
+  const key=(store.get(KEYS[model.prov])||"").trim();
+  if(!key)return null;
+  const msgs=history();
+  try{
+    if(model.prov==="google"){
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model.model}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
+        body:JSON.stringify({systemInstruction:{parts:[{text:SYSTEM}]},contents:msgs.map(x=>({role:x.role==="user"?"user":"model",parts:[{text:x.content}]}))})});
+      const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||r.status);
+      return {t:(j.candidates&&j.candidates[0].content.parts.map(p=>p.text).join(""))||"(keine Antwort)"};
+    }
+    const url=model.prov==="groq"?"https://api.groq.com/openai/v1/chat/completions":"https://openrouter.ai/api/v1/chat/completions";
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:model.model,messages:[{role:"system",content:SYSTEM},...msgs]})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error&&(j.error.message||j.error)||r.status);
+    return {t:j.choices[0].message.content.trim()};
+  }catch(e){
+    return {t:`Das hat leider nicht geklappt. **${model.name}** meldet: ${String(e.message||e).slice(0,160)}\n\nPrüf in den Einstellungen, ob der Schlüssel stimmt, oder wähl oben ein anderes Modell.`};
+  }
+}
+function getReply(text){
+  const s=text.toLowerCase();
+  if(/ordner|aufräum|sortier/.test(s))return makeReply(text);
+  return askAI().then(r=>r||makeReply(text));
+}
+
+/* Simulierte Antworten (ohne Schlüssel) */
 function makeReply(q,alt){
   const s=q.toLowerCase();
   if(/ordner/.test(s)){
@@ -644,7 +694,7 @@ function makeReply(q,alt){
   if(/^(hallo|hi|hey|moin|servus|na)\b/.test(s))return {t:alt?"Hey! Was steht heute an?":"Hallo! Schön, dass du da bist. Gib mir einfach einen Auftrag oder frag mich etwas."};
   if(/idee/.test(s))return {t:"Sehr gern! Ein paar Fragen zum Start:\n- Soll es eher **lustig**, **gruselig** oder **entspannt** sein?\n- Spielt man **allein** oder **mit Freunden**?\n- Was ist das **Ziel**: sammeln, überleben oder bauen?\n\nErzähl mir, was dir gefällt, dann spinnen wir weiter."};
   if(/wer bist du|wie heißt du/.test(s))return {t:"Ich bin **Luigi**, dein persönlicher Assistent. Ich wohne auf deinem PC, du kannst mich später auch vom Handy aus steuern."};
-  return {t:alt?`Hier ist eine andere Version: Sobald **${model.name}** angeschlossen ist, antworte ich dir hier richtig.`:`Gute Frage! Gerade bin ich noch eine Vorschau. Sobald **${model.name}** angeschlossen ist, bekommst du hier eine echte Antwort.`};
+  return {t:`Für **${model.name}** fehlt noch der Schlüssel. Öffne unten links die **Einstellungen** und füge ihn dort ein, dann antworte ich dir richtig.`};
 }
 
 /* ---------- Senden ---------- */
@@ -656,7 +706,7 @@ function submit(text){
   current.msgs.push({r:"u",t:text});window.FX&&FX.burstFrom(act,30);addUser(text,true);
   renderRecents(fresh?current.id:null);
   input.value="";autosize();
-  respond(makeReply(text));
+  respond(getReply(text));
 }
 function setState(){form.dataset.state=busy?"busy":input.value.trim()?"ready":"idle";form.classList.toggle("busy",busy);
   act.setAttribute("aria-label",busy?"Antwort anhalten":input.value.trim()?"Senden":"Spracheingabe");$("#newChat").disabled=!current&&!busy}
@@ -732,6 +782,7 @@ document.addEventListener("click",e=>{if(!menu.contains(e.target)&&e.target!==mb
 
 /* ---------- Einstellungen ---------- */
 const scrim=$("#scrim"),seg=$("#seg"),pill=seg.querySelector(".pill"),sw=$("#motionSw");
+document.querySelectorAll(".key input").forEach(i=>{i.value=store.get(i.dataset.k)||"";i.addEventListener("change",()=>{store.set(i.dataset.k,i.value.trim());toast(i.value.trim()?"Schlüssel gespeichert":"Schlüssel entfernt")})});
 function openSettings(){scrim.classList.add("open");placePill();setTimeout(()=>$("#closeSettings").focus(),50)}
 function closeSettings(){scrim.classList.remove("open")}
 $("#openSettings").onclick=openSettings;$("#closeSettings").onclick=closeSettings;
@@ -792,11 +843,6 @@ addEventListener("pointermove",e=>{
   mx=e.clientX;my=e.clientY;moved=true;
   if(rx<-900){rx=mx;ry=my}
   ring.classList.add("on");
-  if(on()&&Math.hypot(mx-lx,my-ly)>7){
-    hue=(hue+1)%pal.length;
-    add({x:mx,y:my,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6-.2,g:0,r:1.4+Math.random()*2.2,life:1,dec:.03+Math.random()*.02,c:pal[hue],t:"c"});
-    lx=mx;ly=my;
-  }
   const t=e.target;
   /* magnetisch */
   const m=t.closest&&t.closest(".mag");
@@ -816,7 +862,6 @@ addEventListener("pointermove",e=>{
 document.addEventListener("mouseleave",()=>{ring.classList.remove("on");mx=my=-999;moved=true});
 addEventListener("pointerdown",e=>{
   ring.classList.add("down");
-  if(on())spark(e.clientX,e.clientY,12,2.2,false);
   const b=e.target.closest&&e.target.closest(".press,.mini,.opt,.seg button");
   if(b&&on()){if(getComputedStyle(b).position==="static")b.style.position="relative";b.style.overflow="hidden";
     const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*2.2,s=document.createElement("span");

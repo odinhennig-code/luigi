@@ -2,14 +2,25 @@
 
 Luigi ist ein persönlicher KI-Assistent, der auf dem PC wohnt.
 
-## Ziel
+## Herunterladen
 
-- Chatten wie mit Gemini oder Claude, in einer cleanen Oberfläche mit vielen Effekten
-- Kostenlose KI-Modelle auswählen (z. B. über OpenRouter, Groq oder Google)
-- Später: eine eigene, selbst angelernte KI
-- Später: Ordner anlegen und Aufgaben direkt auf dem PC erledigen
-- Später: Steuerung über eine Handy-App
+Die neueste **Luigi.exe** gibt es unter [Releases](../../releases/latest).
+Einfach herunterladen und per Doppelklick starten. Falls Windows warnt: *Weitere Informationen* → *Trotzdem ausführen*.
 
-## Stand
+Nach jeder Änderung baut GitHub die Luigi.exe automatisch neu.
 
-- `index.html` – Oberfläche (Vorschau, Antworten noch simuliert)
+## KI-Schlüssel
+
+In Luigi unten links auf **Einstellungen** klicken und die Schlüssel einfügen:
+
+- Groq: console.groq.com/keys
+- OpenRouter: openrouter.ai/settings/keys
+- Google AI Studio: aistudio.google.com/apikey
+
+Die Schlüssel bleiben nur auf dem eigenen PC gespeichert.
+
+## Aufbau
+
+- `index.html` – die Oberfläche
+- `app/` – das Windows-Programm drumherum
+- `.github/workflows/build.yml` – baut die Luigi.exe automatisch

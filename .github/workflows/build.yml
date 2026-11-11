@@ -1,0 +1,33 @@
+name: Luigi.exe bauen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Bauen
+        run: dotnet publish app/Luigi.csproj -c Release -o out
+
+      - name: Als Download bereitstellen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest out/Luigi.exe \
+            --title "Luigi – neueste Version" \
+            --notes "Lade **Luigi.exe** herunter und starte sie per Doppelklick. Falls Windows warnt: auf *Weitere Informationen* und dann *Trotzdem ausführen* klicken." \
+            --latest
