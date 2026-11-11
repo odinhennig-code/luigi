@@ -86,7 +86,7 @@ svg{display:block}
 .model-btn:hover{background:var(--hover);color:var(--ink)}
 .model-btn .ico{width:16px;height:16px;transition:transform .25s var(--ease)}
 .model-btn[aria-expanded="true"] .ico{transform:rotate(180deg)}
-.menu{position:absolute;top:calc(100% + 8px);left:0;width:300px;background:var(--bg);border:1px solid var(--line);border-radius:18px;box-shadow:var(--pop);padding:6px;z-index:40;
+.menu{position:absolute;top:calc(100% + 8px);left:0;width:340px;background:var(--bg);border:1px solid var(--line);border-radius:18px;box-shadow:var(--pop);padding:6px;z-index:40;
   opacity:0;transform:translateY(-6px) scale(.97);transform-origin:top left;visibility:hidden;transition:opacity .18s,transform .22s var(--ease),visibility 0s .22s}
 .menu.open{opacity:1;transform:none;visibility:visible;transition:opacity .18s,transform .22s var(--ease)}
 .menu-head{font-size:12px;font-weight:600;color:var(--muted);padding:8px 12px 4px}
@@ -245,6 +245,7 @@ svg{display:block}
 
 .main{isolation:isolate}
 .top,.body{position:relative;z-index:1}
+.top{z-index:6}
 .aurora{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 .aurora i{position:absolute;width:46vmax;height:46vmax;border-radius:50%;filter:blur(80px);opacity:.15;animation:drift 22s ease-in-out infinite alternate}
 .aurora i:nth-child(1){background:var(--g1);top:-22vmax;left:-12vmax}
@@ -363,6 +364,25 @@ svg{display:block}
 .cres ul{margin:0;padding-left:18px}
 .cres p{margin:0 0 6px}
 .status.ok{background:color-mix(in srgb,var(--g5) 18%,transparent);color:color-mix(in srgb,var(--g5) 70%,var(--ink))}
+
+/* ruhiger: weniger Effekte, Text-Effekte bleiben */
+.spot{display:none}
+.aurora i{opacity:.07}
+:root[data-theme="dark"] .aurora i{opacity:.11}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .aurora i{opacity:.11}}
+.avatar{animation:none;cursor:pointer}
+.chip::before{display:none}
+.msg-ai.done:hover .spark{transform:none}
+.action:hover{box-shadow:none}
+.via{font-size:12px;color:var(--faint);margin-left:8px;align-self:center}
+.upd{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:30;display:none;align-items:center;gap:10px;padding:6px 6px 6px 16px;border-radius:999px;background:var(--bg);border:1px solid var(--line);box-shadow:var(--pop);font-size:13.5px;animation:rise .5s var(--ease) both}
+.upd.show{display:flex}
+.upd button{font-weight:600;font-size:13px;padding:7px 14px;border-radius:999px;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff}
+.ver{font-size:12px;color:var(--faint);text-align:center;margin:12px 0 0}
+.opt .tag.miss{background:color-mix(in srgb,var(--g3) 14%,transparent);color:color-mix(in srgb,var(--g3) 70%,var(--ink))}
+.opt.auto{border-bottom:1px solid var(--line);border-radius:12px 12px 4px 4px;margin-bottom:4px}
+.name-in{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1.5px solid transparent;border-radius:12px;padding:8px 12px;outline:none;width:170px;transition:border-color .2s,background .2s}
+.name-in:focus{border-color:var(--g2);background:var(--bg)}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
 </style>
 </head>
@@ -406,15 +426,16 @@ svg{display:block}
         <span class="brand-name">Luigi</span>
         <div class="model-wrap">
           <button class="model-btn press mag" id="modelBtn" aria-haspopup="menu" aria-expanded="false">
-            <span class="mdot" id="modelDot" style="background:var(--g5)"></span><span id="modelName">Llama 3.3</span>
+            <span class="mdot" id="modelDot" style="background:var(--g2)"></span><span id="modelName">Automatisch</span>
             <svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="menu" id="menu" role="menu" aria-label="Modell wählen"></div>
         </div>
       </div>
-      <div class="avatar" aria-label="Profil"><svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+      <div class="avatar" id="avatar" role="button" tabindex="0" aria-label="Profil und Einstellungen" title="Profil und Einstellungen"><svg class="ico" viewBox="0 0 24 24" style="width:18px;height:18px"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
     </header>
 
+    <div class="upd" id="upd" role="status"><span id="updText">Neue Version da</span><button id="updBtn">Jetzt aktualisieren</button></div>
     <div class="body">
       <div class="scroll" id="scroll">
         <div class="col">
@@ -468,6 +489,10 @@ svg{display:block}
       <button class="icon-btn press" id="closeSettings" aria-label="Schließen"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </h2>
     <div class="row">
+      <div><b>Dein Name</b><i>Damit Luigi dich begrüßt</i></div>
+      <input class="name-in" id="nameIn" maxlength="24" placeholder="Name" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="row">
       <div><b>Erscheinungsbild</b><i>Hell, dunkel oder wie Windows</i></div>
       <div class="seg" id="seg"><span class="pill"></span>
         <button data-v="system" aria-pressed="true">System</button><button data-v="light" aria-pressed="false">Hell</button><button data-v="dark" aria-pressed="false">Dunkel</button>
@@ -488,6 +513,7 @@ svg{display:block}
       <div><b>Dein PC</b><i>Luigi kann Ordner anlegen, öffnen, anzeigen und aufräumen. Er fragt vorher immer.</i></div>
       <span class="status" id="pcStatus">Nur in der App</span>
     </div>
+    <p class="ver" id="ver">Vorschau im Browser</p>
   </div>
 </div>
 
@@ -503,12 +529,13 @@ const calm=()=>!motion;
 
 /* ---------- Daten ---------- */
 const MODELS=[
+  {id:"auto",c:"--g2",name:"Automatisch",desc:"Nimmt ein Modell mit Schlüssel, springt bei Fehlern um"},
   {id:"groq",c:"--g5",name:"Llama 3.3",desc:"Über Groq · sehr schnell",prov:"groq",model:"llama-3.3-70b-versatile"},
   {id:"or",c:"--g1",name:"Frei-Mix",desc:"Über OpenRouter · kostenlose Modelle",prov:"openrouter",model:"openrouter/free"},
   {id:"gem",c:"--g4",name:"Gemini Flash",desc:"Über Google AI Studio",prov:"google",model:"gemini-flash-latest"},
   {id:"own",c:"--g3",name:"Luigi Eigen",desc:"Von dir angelernt",soon:true}
 ];
-let model=MODELS.find(x=>x.id===store.get("luigi-model"))||MODELS[0];
+let model=MODELS.find(x=>x.id===store.get("luigi-modell"))||MODELS[0];
 const IC={
   folder:'<svg class="ico" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
   sort:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
@@ -564,7 +591,7 @@ const plain=t=>t.replace(/\*\*/g,"");
 let toastT;
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800)}
 async function copy(text,btn){
-  try{await navigator.clipboard.writeText(text);toast("Kopiert");if(btn&&window.FX)FX.burstFrom(btn,10);
+  try{await navigator.clipboard.writeText(text);toast("Kopiert");
     if(btn){const old=btn.innerHTML;btn.innerHTML=IC.check;setTimeout(()=>btn.innerHTML=old,1400)}}
   catch(e){toast("Kopieren ist hier nicht möglich")}
 }
@@ -593,7 +620,7 @@ function addUser(t,animate){
 }
 function tools(m,animate){
   const d=document.createElement("div");d.className="ai-tools"+(animate?" show":"");
-  d.innerHTML=`<button class="mini press" data-a="up" aria-label="Gute Antwort" title="Gute Antwort">${IC.up}</button><button class="mini press" data-a="down" aria-label="Schlechte Antwort" title="Schlechte Antwort">${IC.down}</button><button class="mini press" data-a="redo" aria-label="Neu erzeugen" title="Neu erzeugen">${IC.redo}</button><button class="mini press" data-a="copy" aria-label="Kopieren" title="Kopieren">${IC.copy}</button>`;
+  d.innerHTML=`<button class="mini press" data-a="up" aria-label="Gute Antwort" title="Gute Antwort">${IC.up}</button><button class="mini press" data-a="down" aria-label="Schlechte Antwort" title="Schlechte Antwort">${IC.down}</button><button class="mini press" data-a="redo" aria-label="Neu erzeugen" title="Neu erzeugen">${IC.redo}</button><button class="mini press" data-a="copy" aria-label="Kopieren" title="Kopieren">${IC.copy}</button>`+(m.via?`<span class="via">${esc(m.via)}</span>`:"");
   const up=d.querySelector('[data-a="up"]'),down=d.querySelector('[data-a="down"]');
   up.onclick=()=>{up.classList.toggle("on");down.classList.remove("on");if(up.classList.contains("on")){toast("Danke für dein Feedback");window.FX&&FX.confetti(up)}};
   down.onclick=()=>{down.classList.toggle("on");up.classList.remove("on");if(down.classList.contains("on"))toast("Danke, Luigi lernt daraus")};
@@ -634,7 +661,7 @@ function respond(reply,row){
   const m={r:"a",t:"",card:null};
   job={d,box,m,timers:[]};
   const started=Date.now();
-  Promise.resolve(reply).then(rp=>{if(!job||job.d!==d)return;m.t=rp.t;m.card=rp.card;m.cards=rp.cards;if(rp.via&&rp.via!==model.name)toast("Antwort kam von "+rp.via);
+  Promise.resolve(reply).then(rp=>{if(!job||job.d!==d)return;m.t=rp.t;m.card=rp.card;m.cards=rp.cards;m.via=rp.via;
   job.timers.push(setTimeout(()=>{
     d.classList.remove("thinking");
     box.className="ai-text streaming";
@@ -710,7 +737,7 @@ thread.addEventListener("click",async e=>{
 
 /* ---------- Echte KI ---------- */
 const KEYS={groq:"luigi-key-groq",openrouter:"luigi-key-openrouter",google:"luigi-key-google"};
-const hasKey=m=>!!(m.prov&&(store.get(KEYS[m.prov])||"").trim());
+const hasKey=m=>m.id==="auto"?MODELS.some(x=>x.prov&&hasKey(x)):!!(m.prov&&(store.get(KEYS[m.prov])||"").trim());
 function system(){
   let t="Du bist Luigi, ein freundlicher persönlicher KI-Assistent, der als Programm auf dem Windows-PC des Nutzers wohnt. Antworte auf Deutsch, klar und eher kurz. Nutze für Listen Zeilen, die mit '- ' beginnen, und **fett** für wichtige Wörter.";
   if(HOST)t+=' Du kannst auf dem PC diese Aktionen vorschlagen. Schreib dafür jeweils eine eigene Zeile genau in dieser Form: [[AKTION {"typ":"ordner_anlegen","ort":"Desktop","name":"Schule"}]]. Erlaubte typ: ordner_anlegen (ort, name), ordner_oeffnen (ort, name optional), dateien_auflisten (ort, name optional), aufraeumen (ort, name optional; sortiert lose Dateien in Unterordner nach Art). Erlaubte ort: Desktop, Dokumente, Downloads, Bilder, Musik, Videos. Unterordner gibst du als name an, z. B. "Schule/Mathe". Der Nutzer bestätigt jede Aktion selbst per Klick, sag also nicht, dass sie schon erledigt ist. Schreib vorher einen kurzen Satz, was du vorhast. Löschen kannst du nicht.';
@@ -745,7 +772,8 @@ function parseActions(t){
   return {t:text||"Hier ist mein Vorschlag:",cards};
 }
 async function askAI(){
-  const order=[model,...MODELS.filter(x=>x!==model)].filter(hasKey);
+  if(model.id!=="auto"&&!hasKey(model))return {t:`Für **${model.name}** fehlt noch der Schlüssel. Füge ihn in den **Einstellungen** ein oder stell oben auf **Automatisch**.`};
+  const order=model.id==="auto"?MODELS.filter(x=>x.prov&&hasKey(x)):[model];
   if(!order.length)return null;
   const msgs=history();let errs=[];
   for(const m of order){
@@ -780,7 +808,7 @@ function submit(text){
   const fresh=!current;
   if(fresh){current={id:Date.now(),title:text.length>34?text.slice(0,32).trim()+" …":text,msgs:[]};chats.unshift(current)}
   setEmpty(false);
-  current.msgs.push({r:"u",t:text});window.FX&&FX.burstFrom(act,30);addUser(text,true);
+  current.msgs.push({r:"u",t:text});addUser(text,true);
   renderRecents(fresh?current.id:null);
   input.value="";autosize();
   respond(getReply(text));
@@ -841,9 +869,9 @@ function renderMenu(){
   menu.innerHTML='<div class="menu-head">Modell wählen</div>';
   MODELS.forEach(m=>{
     const b=document.createElement("button");
-    b.className="opt"+(m.id===model.id?" sel":"");b.disabled=!!m.soon;b.setAttribute("role","menuitemradio");b.setAttribute("aria-checked",m.id===model.id);
-    b.innerHTML=`<span class="mdot" style="background:var(${m.c})"></span><div><b>${m.name}</b><i>${m.desc}</i></div>`+(m.soon?'<span class="tag">kommt bald</span>':`<span class="check">${IC.check}</span>`);
-    b.onclick=()=>{model=m;store.set("luigi-model",m.id);$("#modelName").textContent=m.name;$("#modelDot").style.background=`var(${m.c})`;window.FX&&FX.burstFrom(mbtn,14);closeMenu();toast(m.name+" ausgewählt")};
+    b.className="opt"+(m.id===model.id?" sel":"")+(m.id==="auto"?" auto":"");b.disabled=!!m.soon;b.setAttribute("role","menuitemradio");b.setAttribute("aria-checked",m.id===model.id);
+    b.innerHTML=`<span class="mdot" style="background:var(${m.c})"></span><div><b>${m.name}</b><i>${m.desc}</i></div>`+(m.soon?'<span class="tag">kommt bald</span>':(m.prov&&!hasKey(m)?'<span class="tag miss">Schlüssel fehlt</span>':`<span class="check">${IC.check}</span>`));
+    b.onclick=()=>{model=m;store.set("luigi-modell",m.id);$("#modelName").textContent=m.name;$("#modelDot").style.background=`var(${m.c})`;closeMenu();toast(m.name+" ausgewählt")};
     menu.appendChild(b);
   });
 }
@@ -885,8 +913,18 @@ document.addEventListener("keydown",e=>{
   if(!typing&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.length===1&&!scrim.classList.contains("open")&&!menu.classList.contains("open")){input.focus()}
 });
 
+const myName=(store.get("luigi-name")||"").trim();
+if(myName){$(".hello").textContent=`Hallo, ${myName}.`;$(".sub").textContent="Ich bin Luigi. Was soll ich erledigen?"}
+const nameIn=$("#nameIn");nameIn.value=myName;
+nameIn.addEventListener("change",()=>{store.set("luigi-name",nameIn.value.trim());toast("Name gespeichert");setTimeout(()=>location.reload(),700)});
+$("#avatar").onclick=openSettings;
+$("#avatar").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openSettings()}});
+if(window.LUIGI_VERSION)$("#ver").textContent="Luigi Version "+window.LUIGI_VERSION;
+if(HOST)HOST.addEventListener("message",e=>{const d=e.data||{};
+  if(d.type==="update"){$("#updText").textContent=`Luigi ${d.version} ist da`;$("#upd").classList.add("show")}
+  if(d.type==="update_fail"){$("#upd").classList.remove("show");toast("Update hat nicht geklappt")}});
+$("#updBtn").onclick=()=>{$("#updBtn").textContent="Lädt …";$("#updBtn").disabled=true;HOST&&HOST.postMessage(JSON.stringify({id:"upd",typ:"update_installieren"}))};
 function syncModel(){
-  if(!hasKey(model)){const k=MODELS.find(hasKey);if(k)model=k}
   $("#modelName").textContent=model.name;$("#modelDot").style.background=`var(${model.c})`;
   const st=$("#pcStatus");if(st){st.textContent=HOST?"Verbunden":"Nur in der App";st.classList.toggle("ok",!!HOST)}
 }
@@ -932,7 +970,7 @@ addEventListener("pointermove",e=>{
   const m=t.closest&&t.closest(".mag");
   if(magEl&&magEl!==m){magEl.style.setProperty("--tx","0px");magEl.style.setProperty("--ty","0px")}
   magEl=m;
-  if(m&&on()){const r=m.getBoundingClientRect();const dx=(mx-(r.left+r.width/2))/r.width,dy=(my-(r.top+r.height/2))/r.height;
+  if(false){const r=m.getBoundingClientRect();const dx=(mx-(r.left+r.width/2))/r.width,dy=(my-(r.top+r.height/2))/r.height;
     const k=Math.min(10,r.width*.12);m.style.setProperty("--tx",(dx*k).toFixed(1)+"px");m.style.setProperty("--ty",(dy*k*.9).toFixed(1)+"px")}
   /* Lichtpunkt auf Chips, Karten, Blasen */
   const g=t.closest&&t.closest(".chip,.action");
@@ -940,14 +978,14 @@ addEventListener("pointermove",e=>{
   glowEl=g;
   if(g){const r=g.getBoundingClientRect();const px=(mx-r.left)/r.width,py=(my-r.top)/r.height;
     g.style.setProperty("--x",(px*100)+"%");g.style.setProperty("--y",(py*100)+"%");
-    if(g.classList.contains("action")&&on()){g.style.setProperty("--rx",((.5-py)*10).toFixed(2)+"deg");g.style.setProperty("--ry",((px-.5)*12).toFixed(2)+"deg")}}
+    if(false){g.style.setProperty("--rx",((.5-py)*10).toFixed(2)+"deg");g.style.setProperty("--ry",((px-.5)*12).toFixed(2)+"deg")}}
   ring.classList.toggle("hot",!!(t.closest&&t.closest("button,a,textarea,.action,[role=switch]")));
 },{passive:true});
 document.addEventListener("mouseleave",()=>{ring.classList.remove("on");mx=my=-999;moved=true});
 addEventListener("pointerdown",e=>{
   ring.classList.add("down");
   const b=e.target.closest&&e.target.closest(".press,.mini,.opt,.seg button");
-  if(b&&on()){if(getComputedStyle(b).position==="static")b.style.position="relative";b.style.overflow="hidden";
+  if(false){if(getComputedStyle(b).position==="static")b.style.position="relative";b.style.overflow="hidden";
     const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*2.2,s=document.createElement("span");
     s.className="ripple";s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
     b.appendChild(s);setTimeout(()=>s.remove(),700)}
@@ -956,8 +994,7 @@ addEventListener("pointerup",()=>ring.classList.remove("down"));
 
 /* Tippen */
 const input=document.getElementById("input"),form=document.getElementById("form"),act=document.getElementById("act");
-input.addEventListener("input",()=>{form.classList.remove("kick");void form.offsetWidth;form.classList.add("kick");
-  if(on()){const r=act.getBoundingClientRect();spark(r.left-6,r.top+r.height/2,3,1.4,false)}});
+
 
 /* Begrüßung: Buchstaben reagieren auf die Maus */
 const hello=document.querySelector(".hello");let chars=[];
@@ -1030,12 +1067,6 @@ const G=[
   {sel:".hello .ch",when:empty,f(cx,cy,dx,dy,d){const k=Math.max(0,1-d/150);return{x:d?-dx/d*k*7:0,y:-k*17,s:1+k*.24,r:-dx/150*10*k,glow:k}}},
   {sel:".sub .sch",when:empty,f(cx,cy,dx,dy,d){const k=Math.max(0,1-d/115);return{x:d?-dx/d*k*4:0,y:-k*9,s:1+k*.14,r:-dx/115*7*k,tint:k}}},
   {sel:".brand-name .bch",f(cx,cy,dx,dy,d){const k=Math.max(0,1-d/75);return{y:-k*8,s:1+k*.3,r:-dx/75*14*k}}},
-  {sel:".chip",when:empty,f(cx,cy,dx,dy,d){const k=Math.max(0,1-d/170);return{x:dx*.09*k,y:dy*.12*k-k*3,s:1+k*.05,r:dx*.025*k}}},
-  {sel:".recent",when:()=>!side.classList.contains("collapsed")&&mx>=0&&mx<side.getBoundingClientRect().right,f(cx,cy,dx,dy){const k=Math.max(0,1-Math.abs(dy)/85);return{x:k*k*14,s:1+k*k*.05}}},
-  {sel:".ai-tools .mini,.u-tools .mini",f(cx,cy,dx,dy){const v=Math.abs(dy);if(v>50)return{};const k=Math.max(0,1-Math.abs(dx)/95)*(1-v/50);return{y:-k*9,s:1+k*.62}}},
-  {sel:".msg-ai .spark",f(cx,cy,dx,dy,d){const k=Math.max(0,1-d/280);return{r:clamp(dx/3,-50,50)*k,s:1+k*.3}}},
-  {sel:".avatar",f(cx,cy,dx,dy,d){const k=Math.max(0,1-d/320);return{x:clamp(dx*.05,-7,7)*k,y:clamp(dy*.05,-7,7)*k,r:clamp(dx*.08,-18,18)*k,s:1+k*.08}}},
-  {sel:".model-btn .mdot",f(cx,cy,dx,dy,d){const k=Math.max(0,1-d/90);return{s:1+k*.9}}}
 ];
 const REST={x:0,y:0,s:1,r:0};
 const state=new WeakMap();let items=[];

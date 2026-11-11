@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -29,6 +31,9 @@ namespace Luigi
     public class MainForm : Form
     {
         const string Host = "luigi.local";
+        static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        static readonly string BaseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Luigi");
+        string updateUrl, updateVersion;
         readonly WebView2 web;
         readonly bool dark;
 
@@ -68,7 +73,7 @@ namespace Luigi
 
         async Task Start()
         {
-            string baseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Luigi");
+            string baseDir = BaseDir;
             string appDir = Path.Combine(baseDir, "app");
             Directory.CreateDirectory(appDir);
             using (var res = typeof(MainForm).Assembly.GetManifestResourceStream("index.html"))
@@ -102,8 +107,11 @@ namespace Luigi
                     Open(e.Uri);
                 }
             };
+            try { await core.Profile.ClearBrowsingDataAsync(CoreWebView2BrowsingDataKinds.DiskCache | CoreWebView2BrowsingDataKinds.CacheStorage); } catch { }
+            await core.AddScriptToExecuteOnDocumentCreatedAsync("window.LUIGI_VERSION=" + JsonSerializer.Serialize(Version) + ";");
             core.WebMessageReceived += OnMessage;
-            core.Navigate("https://" + Host + "/index.html");
+            core.NavigationCompleted += async (s, e) => await CheckUpdate();
+            core.Navigate("https://" + Host + "/index.html?v=" + Version + "-" + DateTime.UtcNow.Ticks);
         }
 
         // ---------- Aufträge vom Chat auf dem PC ausführen ----------
@@ -118,6 +126,8 @@ namespace Luigi
                 id = Get("id"); typ = Get("typ"); ort = Get("ort"); name = Get("name");
             }
             catch { return; }
+
+            if (typ == "update_installieren") { await InstallUpdate(); return; }
 
             (bool ok, string msg) result;
             try { result = await Task.Run(() => Run(typ, ort, name)); }
@@ -218,6 +228,87 @@ namespace Luigi
                 }
             }
             return (false, "Diesen Auftrag kenne ich noch nicht.");
+        }
+
+        // ---------- Automatische Updates über GitHub ----------
+        static string Repo()
+        {
+            try
+            {
+                using var res = typeof(MainForm).Assembly.GetManifestResourceStream("repo.txt");
+                if (res == null) return null;
+                using var r = new StreamReader(res);
+                return r.ReadToEnd().Trim();
+            }
+            catch { return null; }
+        }
+
+        static HttpClient Http()
+        {
+            var h = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+            h.DefaultRequestHeaders.UserAgent.ParseAdd("Luigi/" + Version);
+            return h;
+        }
+
+        bool checkedUpdate;
+        async Task CheckUpdate()
+        {
+            if (checkedUpdate) return;
+            checkedUpdate = true;
+            string repo = Repo();
+            if (string.IsNullOrEmpty(repo)) return;
+            try
+            {
+                using var http = Http();
+                var json = await http.GetStringAsync($"https://api.github.com/repos/{repo}/releases/latest");
+                using var doc = JsonDocument.Parse(json);
+                var name = doc.RootElement.GetProperty("name").GetString() ?? "";
+                var m = System.Text.RegularExpressions.Regex.Match(name, @"(\d+\.\d+\.\d+)");
+                if (!m.Success) return;
+                if (new System.Version(m.Groups[1].Value) <= new System.Version(Version)) return;
+                foreach (var a in doc.RootElement.GetProperty("assets").EnumerateArray())
+                    if (a.GetProperty("name").GetString() == "Luigi.exe") updateUrl = a.GetProperty("browser_download_url").GetString();
+                if (updateUrl == null) return;
+                updateVersion = m.Groups[1].Value;
+                web.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "update", version = updateVersion }));
+            }
+            catch { }
+        }
+
+        async Task InstallUpdate()
+        {
+            try
+            {
+                if (updateUrl == null) throw new Exception();
+                string dir = Path.Combine(BaseDir, "update");
+                Directory.CreateDirectory(dir);
+                string newExe = Path.Combine(dir, "Luigi.exe");
+                using (var http = Http())
+                using (var stream = await http.GetStreamAsync(updateUrl))
+                using (var file = File.Create(newExe))
+                    await stream.CopyToAsync(file);
+
+                string current = Environment.ProcessPath;
+                string script = Path.Combine(dir, "update.cmd");
+                File.WriteAllText(script,
+                    "@echo off\r\n" +
+                    "set n=0\r\n" +
+                    ":warte\r\n" +
+                    "timeout /t 1 /nobreak >nul\r\n" +
+                    $"copy /y \"{newExe}\" \"{current}\" >nul 2>nul\r\n" +
+                    "if not errorlevel 1 goto fertig\r\n" +
+                    "set /a n+=1\r\n" +
+                    "if %n% lss 30 goto warte\r\n" +
+                    ":fertig\r\n" +
+                    $"start \"\" \"{current}\"\r\n" +
+                    "del \"%~f0\"\r\n", new UTF8Encoding(false));
+                Process.Start(new ProcessStartInfo("cmd.exe", "/c \"" + script + "\"") { CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, UseShellExecute = false });
+                Application.Exit();
+            }
+            catch
+            {
+                try { web.CoreWebView2.PostWebMessageAsJson("{\"type\":\"update_fail\"}"); } catch { }
+            }
         }
 
         static void Open(string url)

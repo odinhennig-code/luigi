@@ -18,6 +18,13 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Version lesen
+        id: ver
+        shell: bash
+        run: |
+          echo "v=$(grep -oP '(?<=<Version>)[^<]+' app/Luigi.csproj)" >> "$GITHUB_OUTPUT"
+          echo "$GITHUB_REPOSITORY" > app/repo.txt
+
       - name: Bauen
         run: dotnet publish app/Luigi.csproj -c Release -o out
 
@@ -28,6 +35,6 @@ jobs:
         run: |
           gh release delete latest --yes --cleanup-tag || true
           gh release create latest out/Luigi.exe \
-            --title "Luigi – neueste Version" \
+            --title "Luigi ${{ steps.ver.outputs.v }}" \
             --notes "Lade **Luigi.exe** herunter und starte sie per Doppelklick. Falls Windows warnt: auf *Weitere Informationen* und dann *Trotzdem ausführen* klicken." \
             --latest
