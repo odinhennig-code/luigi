@@ -125,13 +125,47 @@ namespace Luigi
             catch { }
         }
 
+        static string Embedded()
+        {
+            using var res = typeof(MainForm).Assembly.GetManifestResourceStream("index.html");
+            using var r = new StreamReader(res);
+            return r.ReadToEnd();
+        }
+
+        static int UiVersion(string html)
+        {
+            var m = Regex.Match(html ?? "", @"name=""luigi-ui""\s+content=""(\d+)""");
+            return m.Success ? int.Parse(m.Groups[1].Value) : 0;
+        }
+
+        // Oberfläche aus dem Netz holen: Updates ohne neue exe
+        static async Task<string> NewerUi(int have)
+        {
+            string repo = Repo();
+            if (string.IsNullOrEmpty(repo)) return null;
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
+                http.DefaultRequestHeaders.UserAgent.ParseAdd("Luigi/" + Ver);
+                var html = await http.GetStringAsync($"https://raw.githubusercontent.com/{repo}/main/index.html");
+                if (html.Length > 10000 && UiVersion(html) > have) return html;
+            }
+            catch { }
+            return null;
+        }
+
         async Task Start()
         {
             string appDir = Path.Combine(BaseDir, "app");
+            string uiFile = Path.Combine(appDir, "index.html");
             Directory.CreateDirectory(appDir);
-            using (var res = typeof(MainForm).Assembly.GetManifestResourceStream("index.html"))
-            using (var file = File.Create(Path.Combine(appDir, "index.html")))
-                res.CopyTo(file);
+            string embedded = Embedded(), cached = null;
+            try { if (File.Exists(uiFile)) cached = File.ReadAllText(uiFile); } catch { }
+            string use = cached != null && UiVersion(cached) > UiVersion(embedded) ? cached : embedded;
+            try { File.WriteAllText(uiFile, use, new UTF8Encoding(false)); } catch { }
+
+            var fresh = await NewerUi(UiVersion(use));
+            if (fresh != null) { try { File.WriteAllText(uiFile, fresh, new UTF8Encoding(false)); use = fresh; } catch { } }
 
             try
             {
@@ -158,10 +192,10 @@ namespace Luigi
             };
             try { await core.Profile.ClearBrowsingDataAsync(CoreWebView2BrowsingDataKinds.DiskCache | CoreWebView2BrowsingDataKinds.CacheStorage); } catch { }
             await core.AddScriptToExecuteOnDocumentCreatedAsync(
-                "window.LUIGI_VERSION=" + JsonSerializer.Serialize(Ver) + ";window.LUIGI_APP=" + JsonSerializer.Serialize(new { oben = TopMost, autostart = AutostartOn() }) + ";");
+                "window.LUIGI_VERSION=" + JsonSerializer.Serialize(Ver) + ";window.LUIGI_APP=" + JsonSerializer.Serialize(new { oben = TopMost, autostart = AutostartOn(), ui = UiVersion(use) }) + ";");
             core.WebMessageReceived += OnMessage;
             core.NavigationCompleted += async (s, e) => await CheckUpdate();
-            core.Navigate("https://" + Host + "/index.html?v=" + Ver + "-" + DateTime.UtcNow.Ticks);
+            core.Navigate("https://" + Host + "/index.html?v=" + Ver + "." + UiVersion(use) + "-" + DateTime.UtcNow.Ticks);
         }
 
         void Reply(string id, bool ok, string msg, string data = null)

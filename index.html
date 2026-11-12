@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<meta name="luigi-ui" content="6">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Luigi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -461,6 +462,13 @@ svg{display:block}
 @keyframes jump{30%{transform:translateY(-22px) rotate(15deg) scale(1.12)}60%{transform:translateY(0) rotate(-8deg) scale(.95)}}
 
 /* ================= Version 0.5 ================= */
+:root{--lui:#17a06b}
+:root:not([data-akzent]){--g1:#17a06b;--g2:#0f9b8e;--g3:#3fb96a;--g4:#35b5a8;--g5:#128a5c;--accent:#17a06b}
+@media (prefers-color-scheme: dark){:root:not([data-akzent]):not([data-theme="light"]){--g1:#3ddba0;--g2:#2fd1c0;--g3:#6ee29a;--g4:#4fdcd0;--g5:#2bc289;--accent:#3ddba0}}
+:root[data-theme="dark"]:not([data-akzent]){--g1:#3ddba0;--g2:#2fd1c0;--g3:#6ee29a;--g4:#4fdcd0;--g5:#2bc289;--accent:#3ddba0}
+:root[data-akzent="bunt"]{--g1:#3b6cf6;--g2:#9065f7;--g3:#f2677f;--g4:#ff9f1c;--g5:#14c3a2;--accent:#3b6cf6}
+:root[data-theme="dark"][data-akzent="bunt"]{--g1:#7fa2ff;--g2:#b18cff;--g3:#ff8ea2;--g4:#ffbe55;--g5:#3fe0c2;--accent:#7fa2ff}
+@media (prefers-color-scheme: dark){:root[data-akzent="bunt"]:not([data-theme="light"]){--g1:#7fa2ff;--g2:#b18cff;--g3:#ff8ea2;--g4:#ffbe55;--g5:#3fe0c2;--accent:#7fa2ff}}
 :root[data-akzent="ozean"]{--g1:#0ea5e9;--g2:#3b82f6;--g3:#14b8a6;--g4:#22d3ee;--g5:#6366f1;--accent:#0ea5e9}
 :root[data-akzent="wald"]{--g1:#16a34a;--g2:#0d9488;--g3:#eab308;--g4:#84cc16;--g5:#65a30d;--accent:#16a34a}
 :root[data-akzent="sonne"]{--g1:#f97316;--g2:#ef4444;--g3:#ec4899;--g4:#f59e0b;--g5:#fb7185;--accent:#f97316}
@@ -530,6 +538,23 @@ svg{display:block}
 .palit kbd{font:12px var(--body);color:var(--faint)}
 .msg-user{box-shadow:0 1px 0 color-mix(in srgb,var(--g2) 12%,transparent)}
 .composer{box-shadow:0 1px 0 var(--line)}
+
+.wsheet{max-width:470px;text-align:left}
+.wtop{text-align:center;padding:4px 0 18px}
+.wspark{width:46px;height:46px;margin:0 auto 10px;animation:float 4s ease-in-out infinite}
+.wtop h2{display:block;font-family:var(--display);font-weight:500;font-size:26px;margin:0 0 6px}
+.wtop p{margin:0;color:var(--muted);font-size:14.5px}
+.wstep{border-top:1px solid var(--line);padding:16px 0}
+.wstep b{display:block;font-weight:500;font-size:15px;margin-bottom:8px}
+.wstep i{display:block;font-style:normal;font-size:13px;color:var(--muted);margin:-4px 0 10px}
+.wfull{width:100%;box-sizing:border-box}
+.wkeys{display:flex;gap:8px;margin-bottom:10px}
+.wkey{flex:1;text-align:center;padding:10px 6px;border-radius:14px;background:var(--surface);text-decoration:none;color:var(--ink);transition:background .2s,transform .15s var(--ease)}
+.wkey:hover{background:var(--hover);transform:translateY(-2px)}
+.wkey b{display:block;font-size:14px;font-weight:600}
+.wkey span{font-size:12px;color:var(--muted)}
+.wfoot{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:16px}
+.wfoot .cbtn{padding:10px 20px}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
 </style>
 </head>
@@ -679,6 +704,24 @@ svg{display:block}
 
 <canvas id="fx" aria-hidden="true"></canvas><div class="ring" id="ring" aria-hidden="true" hidden></div>
 <div class="toast" id="toast" role="status"></div>
+<div class="scrim" id="welcome">
+  <div class="sheet wsheet" role="dialog" aria-modal="true" aria-labelledby="wTitle">
+    <div class="wtop"><svg class="wspark" aria-hidden="true"><use href="#spark"/></svg>
+      <h2 id="wTitle">Hallo, ich bin Luigi.</h2>
+      <p>Dein Assistent, der auf deinem eigenen PC wohnt. Zwei kurze Schritte, dann geht's los.</p></div>
+    <div class="wstep"><b>1 · Wie soll ich dich nennen?</b>
+      <input class="name-in wfull" id="wName" maxlength="24" placeholder="Dein Name" autocomplete="off" spellcheck="false"></div>
+    <div class="wstep"><b>2 · Ein KI-Schlüssel</b>
+      <i>Kostenlos, ohne Kreditkarte. Einer reicht. Der Schlüssel bleibt nur auf deinem PC.</i>
+      <div class="wkeys">
+        <a class="wkey" href="https://console.groq.com/keys" target="_blank" rel="noopener"><b>Groq</b><span>am schnellsten</span></a>
+        <a class="wkey" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener"><b>OpenRouter</b><span>viele Modelle</span></a>
+        <a class="wkey" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"><b>Google</b><span>Gemini</span></a>
+      </div>
+      <input class="name-in wfull" id="wKey" placeholder="Schlüssel hier einfügen" autocomplete="off" spellcheck="false" type="password"></div>
+    <div class="wfoot"><button class="cbtn no" id="wSkip">Später</button><button class="cbtn yes" id="wGo">Los geht's</button></div>
+  </div>
+</div>
 
 <div class="scrim" id="scrim">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
@@ -699,7 +742,7 @@ svg{display:block}
       <div><b>Animationen</b><i>Weiche Übergänge und Text-Einblenden</i></div>
       <button class="switch" id="motionSw" role="switch" aria-checked="true" aria-label="Animationen"></button>
     </div>
-    <div class="row"><div><b>Farben</b><i>Luigis Farbwelt</i></div><div class="swatches" id="akz"></div></div>
+    <div class="row"><div><b>Farbe</b><i>Luigi-Grün ist seine eigene Farbe</i></div><div class="swatches" id="akz"></div></div>
     <div class="row"><div><b>Antwort-Stil</b><i>Wie Luigi mit dir redet</i></div><select class="sel-in" id="stilSel" aria-label="Antwort-Stil"><option value="">Normal</option><option value="kurz">Kurz</option><option value="locker">Locker</option><option value="genau">Gründlich</option></select></div>
     <div class="row"><div><b>Schriftgröße</b></div><div class="seg2" id="fontSeg"><button data-v="14.5">Klein</button><button data-v="15.5">Normal</button><button data-v="17">Groß</button></div></div>
     <div class="keys kf"><b class="keys-h">Das weiß Luigi über dich</b><div id="memBox"></div><input id="memIn" placeholder="Etwas hinzufügen und Enter drücken" autocomplete="off" aria-label="Neuer Merkzettel">
@@ -1254,10 +1297,10 @@ $("#recents").parentNode.insertBefore(qIn,$("#recents"));
 qIn.oninput=()=>{chatQ=qIn.value.trim().toLowerCase();renderRecents()};qIn.onkeydown=e=>e.stopPropagation();
 
 /* ---------- Einstellungen: Farben, Stil, Schrift, Merkzettel, Fenster ---------- */
-const AKZ={bunt:["#3b6cf6","#9065f7","#f2677f"],ozean:["#0ea5e9","#3b82f6","#14b8a6"],wald:["#16a34a","#0d9488","#eab308"],sonne:["#f97316","#ef4444","#ec4899"],nacht:["#8b5cf6","#d946ef","#6366f1"]};
-function setAkz(k){if(k==="bunt")delete root.dataset.akzent;else root.dataset.akzent=k;store.set("luigi-akzent",k);document.querySelectorAll("#akz button").forEach(b=>b.classList.toggle("on",b.dataset.k===k))}
+const AKZ={luigi:["#17a06b","#0f9b8e","#3fb96a"],bunt:["#3b6cf6","#9065f7","#f2677f"],ozean:["#0ea5e9","#3b82f6","#14b8a6"],wald:["#16a34a","#0d9488","#eab308"],sonne:["#f97316","#ef4444","#ec4899"],nacht:["#8b5cf6","#d946ef","#6366f1"]};
+function setAkz(k){if(k==="luigi")delete root.dataset.akzent;else root.dataset.akzent=k;store.set("luigi-akzent",k);document.querySelectorAll("#akz button").forEach(b=>b.classList.toggle("on",b.dataset.k===k))}
 $("#akz").innerHTML=Object.keys(AKZ).map(k=>`<button data-k="${k}" title="${k[0].toUpperCase()+k.slice(1)}" aria-label="${k}" style="background:linear-gradient(135deg,${AKZ[k].join(",")})"></button>`).join("");
-$("#akz").onclick=e=>{const b=e.target.closest("button");if(b)setAkz(b.dataset.k)};setAkz(AKZ[store.get("luigi-akzent")]?store.get("luigi-akzent"):"bunt");
+$("#akz").onclick=e=>{const b=e.target.closest("button");if(b)setAkz(b.dataset.k)};setAkz(AKZ[store.get("luigi-akzent")]?store.get("luigi-akzent"):"luigi");
 const stilSel=$("#stilSel");stilSel.value=store.get("luigi-stil")||"";stilSel.onchange=()=>store.set("luigi-stil",stilSel.value);
 function setFont(v){document.body.style.fontSize=v+"px";store.set("luigi-schrift",v);document.querySelectorAll("#fontSeg button").forEach(b=>b.classList.toggle("on",b.dataset.v===String(v)))}
 $("#fontSeg").onclick=e=>{const b=e.target.closest("button");if(b)setFont(b.dataset.v)};setFont(store.get("luigi-schrift")||"15.5");
@@ -1301,6 +1344,23 @@ palIn.onkeydown=e=>{e.stopPropagation();const n=palList.querySelectorAll(".palit
   if(e.key==="Escape")palClose()};
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();e.stopPropagation();pal.classList.contains("open")?palClose():palOpen()}},true);
 if(!myName)$(".hello").textContent=gruss()==="Hallo"?"Hallo, ich bin Luigi.":gruss()+", ich bin Luigi.";
+
+/* ---------- Erster Start ---------- */
+const wel=$("#welcome");
+function closeWel(){wel.classList.remove("open")}
+$("#wSkip").onclick=()=>{store.set("luigi-start","1");closeWel()};
+$("#wGo").onclick=()=>{
+  const n=$("#wName").value.trim().slice(0,24),k=$("#wKey").value.trim();
+  if(n)store.set("luigi-name",n);
+  if(k){const kind=/^gsk_/.test(k)?"groq":/^sk-or/.test(k)?"openrouter":/^AIza/.test(k)?"google":null;
+    if(!kind){toast("Den Schlüssel erkenne ich nicht – trag ihn in den Einstellungen ein");return}
+    store.set(KEYS[kind],k)}
+  store.set("luigi-start","1");closeWel();
+  if(n||k)setTimeout(()=>location.reload(),300);
+};
+$("#wKey").onkeydown=e=>{e.stopPropagation();if(e.key==="Enter")$("#wGo").click()};
+$("#wName").onkeydown=e=>{e.stopPropagation();if(e.key==="Enter")$("#wKey").focus()};
+if(!store.get("luigi-start")&&!MODELS.some(x=>x.prov&&hasKey(x))){wel.classList.add("open");setTimeout(()=>$("#wName").focus(),400)}
 
 window.LUIGI={askRaw,system,parseActions,md,esc,card,cardsHTML,autoRun,toast,store,HOST,SPARK,IC,ACTIONS_HELP,getModel:()=>model,hasAnyKey:()=>MODELS.some(x=>x.prov&&hasKey(x))};
 renderRecents();setState();

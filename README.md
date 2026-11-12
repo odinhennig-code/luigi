@@ -1,26 +1,58 @@
 # Luigi
 
-Luigi ist ein persönlicher KI-Assistent, der auf dem PC wohnt.
+<p align="center"><b>Dein eigener KI-Assistent für Windows, der auf deinem PC wohnt.</b></p>
+
+Luigi ist ein Chatfenster für deinen PC: Du redest mit einer KI, und sie kann für dich
+Ordner anlegen, Dateien suchen und sortieren, Webseiten lesen, Programme öffnen und
+zusammen mit dir auf einem Whiteboard planen. Alles bleibt auf deinem Computer.
 
 ## Herunterladen
 
 Die neueste **Luigi.exe** gibt es unter [Releases](../../releases/latest).
-Einfach herunterladen und per Doppelklick starten. Falls Windows warnt: *Weitere Informationen* → *Trotzdem ausführen*.
+Herunterladen, Doppelklick, fertig. Es wird nichts installiert.
 
-Nach jeder Änderung baut GitHub die Luigi.exe automatisch neu.
+Falls Windows warnt: *Weitere Informationen* → *Trotzdem ausführen*.
+Die Warnung kommt, weil die Datei neu ist und keine teure Signatur hat.
 
-## KI-Schlüssel
+Du brauchst Windows 10 oder 11. Microsoft Edge WebView2 ist dort schon dabei;
+falls nicht, sagt Luigi beim Start Bescheid.
 
-In Luigi unten links auf **Einstellungen** klicken und die Schlüssel einfügen:
+## Erster Start
 
-- Groq: console.groq.com/keys
-- OpenRouter: openrouter.ai/settings/keys
-- Google AI Studio: aistudio.google.com/apikey
+Luigi fragt dich nach deinem Namen und einem KI-Schlüssel. Der Schlüssel ist kostenlos
+und bleibt nur auf deinem PC:
 
-Die Schlüssel bleiben nur auf dem eigenen PC gespeichert.
+| Anbieter | Schlüssel holen | gut für |
+|---|---|---|
+| Groq | console.groq.com/keys | am schnellsten |
+| OpenRouter | openrouter.ai/settings/keys | viele kostenlose Modelle |
+| Google AI Studio | aistudio.google.com/apikey | Gemini |
 
-## Aufbau
+Einer reicht. Wenn du mehrere einträgst, springt Luigi automatisch um, falls einer gerade streikt.
 
-- `index.html` – die Oberfläche (Chat, Planungsmodus mit Whiteboard, Modelle, Einstellungen)
-- `app/` – das Windows-Programm drumherum
-- `.github/workflows/build.yml` – baut die Luigi.exe automatisch
+## Was Luigi kann
+
+- **Dateien und Ordner**: anlegen, ansehen, lesen, suchen, verschieben, kopieren, umbenennen,
+  zippen, aufräumen und in den Papierkorb legen. Jede Änderung bestätigst du per Klick.
+- **Internet**: suchen, Webseiten lesen und zusammenfassen, Seiten öffnen
+- **Programme** öffnen, Text in die Zwischenablage legen, PC-Infos abfragen, Erinnerungen stellen
+- **Planungsmodus**: ein Whiteboard, auf das Luigi selbst Mindmaps und Pläne malt, während du mitmalst
+- **Anhänge**: Textdateien, Code und Bilder in den Chat ziehen
+- **Merkzettel**: Dinge, die Luigi dauerhaft über dich wissen soll
+
+Löschen ohne Papierkorb, Systemdateien und das Starten von Programmen aus dem Chat heraus
+kann Luigi nicht.
+
+## Updates
+
+Luigi holt sich seine Oberfläche beim Start selbst und aktualisiert sie ohne neuen Download.
+Nur wenn sich das Programm selbst ändert, bietet er oben ein Update an, das ein Klick erledigt.
+
+## Für Entwickler
+
+- `index.html` – die komplette Oberfläche (Chat, Planungsmodus, Einstellungen), eine Datei ohne Abhängigkeiten
+- `app/` – das Windows-Programm drumherum (C#, WinForms, WebView2)
+- `.github/workflows/build.yml` – baut die Luigi.exe automatisch bei jedem Push
+
+Die Zahl in `<meta name="luigi-ui">` ist die Oberflächen-Version. Wird sie erhöht,
+laden alle laufenden Luigis die neue Oberfläche beim nächsten Start.
