@@ -39,6 +39,9 @@ Einer reicht. Wenn du mehrere einträgst, springt Luigi automatisch um, falls ei
 - **Planungsmodus**: ein Whiteboard, auf das Luigi selbst Mindmaps und Pläne malt, während du mitmalst
 - **Anhänge**: Textdateien, Code und Bilder in den Chat ziehen
 - **Merkzettel**: Dinge, die Luigi dauerhaft über dich wissen soll
+- **Luigi Eigen 0.0.0.1**: eine eigene kleine KI, die auf dem PC lernt. Sie startet völlig
+  leer und kann nur, was man ihr in der **Schule** beibringt. Dahinter steckt ein kleines
+  neuronales Netz, das im Programm selbst trainiert wird – ohne Internet, ohne Schlüssel.
 
 Löschen ohne Papierkorb, Systemdateien und das Starten von Programmen aus dem Chat heraus
 kann Luigi nicht.

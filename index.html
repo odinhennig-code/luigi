@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="luigi-ui" content="6">
+<meta name="luigi-ui" content="7">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Luigi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -555,6 +555,49 @@ svg{display:block}
 .wkey span{font-size:12px;color:var(--muted)}
 .wfoot{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:16px}
 .wfoot .cbtn{padding:10px 20px}
+
+.teach{margin-top:14px;border:1px dashed color-mix(in srgb,var(--g2) 55%,var(--line));border-radius:18px;padding:14px;max-width:520px;animation:rise .4s var(--ease) both}
+.teach b{display:block;font-weight:500;font-size:14px;margin-bottom:8px}
+.teach textarea{width:100%;box-sizing:border-box;font:inherit;font-size:14.5px;color:var(--ink);background:var(--surface);border:1.5px solid transparent;border-radius:12px;padding:9px 12px;outline:none;resize:none}
+.teach textarea:focus{border-color:var(--g2);background:var(--bg)}
+.trow{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+
+/* ---------- Schule ---------- */
+.school{display:none;flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 320px;gap:0}
+.main.schooling .school{display:grid;animation:fadeIn .35s ease both}
+.main.schooling .body,.main.schooling .board-view{display:none}
+.scol{overflow-y:auto;padding:4px 20px 24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.shead{display:flex;align-items:center;gap:12px;padding:6px 2px 2px}
+.shead .spark{width:30px;height:30px}
+.shead b{display:block;font-family:var(--display);font-size:20px;font-weight:500}
+.shead i{display:block;font-style:normal;font-size:13px;color:var(--muted)}
+.shead>div{flex:1}
+.scards{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.scard{background:var(--surface);border-radius:16px;padding:12px 14px}
+.scard b{display:block;font-family:var(--display);font-size:24px;font-weight:500;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.scard span{font-size:12.5px;color:var(--muted)}
+.sbox{border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:9px}
+.sbox>b{font-weight:500;font-size:15px}
+.sbox input,.sbox textarea{font:inherit;font-size:14.5px;color:var(--ink);background:var(--surface);border:1.5px solid transparent;border-radius:12px;padding:9px 12px;outline:none;resize:none;width:100%;box-sizing:border-box}
+.sbox input:focus,.sbox textarea:focus{border-color:var(--g2);background:var(--bg)}
+.stest{background:var(--surface);border-radius:12px;padding:10px 12px;font-size:14.5px;min-height:22px}
+.stest p:last-child{margin-bottom:0}
+.svia{font-size:12px;color:var(--faint);margin-top:6px}
+#sCurve{width:100%;height:90px;display:block}
+.sbar{height:6px;border-radius:999px;background:var(--surface);overflow:hidden}
+.sbar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--g1),var(--g2));transition:width .15s linear}
+.slist{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--line);padding:4px 12px 12px}
+.shead2{display:flex;align-items:center;gap:10px;padding:10px 4px}
+.shead2 b{font-weight:500;flex:none}
+.shead2 input{flex:1;min-width:0;font:inherit;font-size:13.5px;color:var(--ink);background:var(--hover);border:0;border-radius:999px;padding:7px 12px;outline:none}
+.sitems{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.sitem{display:flex;align-items:flex-start;gap:8px;background:var(--surface);border-radius:14px;padding:9px 10px 9px 12px;animation:rise .3s var(--ease) both}
+.sitem>div{flex:1;min-width:0}
+.sitem b{display:block;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sitem span{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sitem button{width:24px;height:24px;border-radius:50%;color:var(--muted);flex:none;line-height:1}
+.sitem button:hover{background:var(--hover);color:var(--ink)}
+@media (max-width:900px){.main.schooling .school{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 240px}.slist{border-left:0;border-top:1px solid var(--line)}}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
 </style>
 </head>
@@ -784,7 +827,7 @@ const MODELS=[
   {id:"groq",c:"--g5",name:"Llama 3.3",desc:"Über Groq · sehr schnell",prov:"groq",model:"llama-3.3-70b-versatile"},
   {id:"or",c:"--g1",name:"Frei-Mix",desc:"Über OpenRouter · kostenlose Modelle",prov:"openrouter",model:"openrouter/free"},
   {id:"gem",c:"--g4",name:"Gemini Flash",desc:"Über Google AI Studio",prov:"google",model:"gemini-flash-latest"},
-  {id:"own",c:"--g3",name:"Luigi Eigen",desc:"Von dir angelernt",soon:true}
+  {id:"own",c:"--g3",name:"Luigi Eigen",desc:"Deine eigene KI · 0.0.0.1",prov:"eigen"}
 ];
 let model=MODELS.find(x=>x.id===store.get("luigi-modell"))||MODELS[0];
 const IC={
@@ -881,7 +924,9 @@ function tools(m,animate){
   const d=document.createElement("div");d.className="ai-tools"+(animate?" show":"");
   d.innerHTML=`<button class="mini press" data-a="up" aria-label="Gute Antwort" title="Gute Antwort">${IC.up}</button><button class="mini press" data-a="down" aria-label="Schlechte Antwort" title="Schlechte Antwort">${IC.down}</button><button class="mini press" data-a="redo" aria-label="Neu erzeugen" title="Neu erzeugen">${IC.redo}</button><button class="mini press" data-a="copy" aria-label="Kopieren" title="Kopieren">${IC.copy}</button><button class="mini press" data-a="say" aria-label="Vorlesen" title="Vorlesen">${IC.say}</button>`+(m.via?`<span class="via">${esc(m.via)}</span>`:"");
   const up=d.querySelector('[data-a="up"]'),down=d.querySelector('[data-a="down"]');
-  up.onclick=()=>{up.classList.toggle("on");down.classList.remove("on");if(up.classList.contains("on")){toast("Danke für dein Feedback");window.FX&&FX.confetti(up)}};
+  up.onclick=()=>{up.classList.toggle("on");down.classList.remove("on");if(up.classList.contains("on")){window.FX&&FX.confetti(up);
+    const q=current&&[...current.msgs].reverse().find(x=>x.r==="u");
+    if(q&&m.t&&store.get("luigi-lernen")!=="off"&&EIGEN.add(q.t,plain(m.t)))toast("Gemerkt · Luigi Eigen hat dazugelernt");else toast("Danke für dein Feedback")}};
   down.onclick=()=>{down.classList.toggle("on");up.classList.remove("on");if(down.classList.contains("on"))toast("Danke, Luigi lernt daraus")};
   d.querySelector('[data-a="copy"]').onclick=e=>copy(plain(m.t),e.currentTarget);
   d.querySelector('[data-a="redo"]').onclick=e=>{const b=e.currentTarget;b.classList.remove("spin");void b.offsetWidth;b.classList.add("spin");regenerate(d.closest(".msg-ai"))};
@@ -920,7 +965,7 @@ function respond(reply,row){
   const m={r:"a",t:"",card:null};
   job={d,box,m,timers:[]};
   const started=Date.now();
-  Promise.resolve(reply).then(rp=>{if(!job||job.d!==d)return;m.t=rp.t;m.card=rp.card;m.cards=rp.cards;m.via=rp.via;
+  Promise.resolve(reply).then(rp=>{if(!job||job.d!==d)return;m.t=rp.t;m.card=rp.card;m.cards=rp.cards;m.teach=rp.teach;m.via=rp.via;
   job.timers.push(setTimeout(()=>{
     d.classList.remove("thinking");
     box.className="ai-text streaming";
@@ -956,6 +1001,7 @@ function finish(stopped){
   box.classList.remove("streaming");box.querySelectorAll(".blk").forEach(b=>b.classList.add("shown"));
   d.classList.add("done");
   box.appendChild(tools(m,true));
+  if(m.teach&&!stopped)box.appendChild(teachBox(m.teach));
   if(!stopped)autoRun(box);
   const idx=d.dataset.idx;
   if(idx!==undefined)current.msgs[+idx]=m;else{d.dataset.idx=current.msgs.length;current.msgs.push(m)}
@@ -1032,7 +1078,7 @@ document.addEventListener("click",async e=>{
 
 /* ---------- Echte KI ---------- */
 const KEYS={groq:"luigi-key-groq",openrouter:"luigi-key-openrouter",google:"luigi-key-google"};
-const hasKey=m=>m.id==="auto"?MODELS.some(x=>x.prov&&hasKey(x)):!!(m.prov&&(store.get(KEYS[m.prov])||"").trim());
+const hasKey=m=>m.id==="auto"?MODELS.some(x=>x.prov&&x.prov!=="eigen"&&hasKey(x)):m.prov==="eigen"?!!(window.EIGEN&&EIGEN.lessons().length):!!(m.prov&&(store.get(KEYS[m.prov])||"").trim());
 function system(){
   let t="Du bist Luigi, ein freundlicher persönlicher KI-Assistent, der als Programm auf dem Windows-PC des Nutzers wohnt. Antworte auf Deutsch, klar und eher kurz. Nutze für Listen Zeilen, die mit '- ' beginnen, und **fett** für wichtige Wörter.";
   t+=ACTIONS_HELP;
@@ -1079,6 +1125,7 @@ function parseActions(t){
   return {t:text||"Hier ist mein Vorschlag:",cards};
 }
 async function askAI(){
+  if(model.id==="own"){const r=EIGEN.reply(current.msgs.filter(x=>x.r==="u").slice(-1)[0].t);const o=parseActions(r.t);return {t:o.t,cards:o.cards,via:r.via,teach:r.teach}}
   const msgs=history(),done=[];
   for(let round=0;round<5;round++){
     const r=await askRaw(msgs);
@@ -1095,7 +1142,7 @@ async function askAI(){
 async function askRaw(msgs,sys){
   if(!window.__ab||window.__ab.signal.aborted)window.__ab=new AbortController();
   if(model.id!=="auto"&&!hasKey(model))return {err:`Für **${model.name}** fehlt noch der Schlüssel. Füge ihn in den **Einstellungen** ein oder stell oben auf **Automatisch**.`};
-  const order=model.id==="auto"?MODELS.filter(x=>x.prov&&hasKey(x)):[model];
+  const order=model.id==="auto"?MODELS.filter(x=>x.prov&&x.prov!=="eigen"&&hasKey(x)):[model];
   if(!order.length)return {err:"Mir fehlt noch ein KI-Schlüssel. Öffne die **Einstellungen** und füge einen ein."};
   let errs=[];
   for(const m of order){
@@ -1104,7 +1151,7 @@ async function askRaw(msgs,sys){
   }
   return {err:"Das hat leider bei keinem Modell geklappt:\n"+errs.map(x=>"- "+x).join("\n")+"\n\nPrüf in den Einstellungen, ob die Schlüssel stimmen."};
 }
-function getReply(text){return (MODELS.some(x=>x.prov&&hasKey(x))?askAI():Promise.resolve(null)).then(r=>r||makeReply(text))}
+function getReply(text){return (model.id==="own"||MODELS.some(x=>x.prov&&x.prov!=="eigen"&&hasKey(x))?askAI():Promise.resolve(null)).then(r=>r||makeReply(text))}
 
 /* Ohne Schlüssel: einfache eingebaute Antworten */
 function makeReply(q,alt){
@@ -1259,6 +1306,15 @@ if(HOST)HOST.addEventListener("message",e=>{const d=e.data||{};
 $("#updBtn").onclick=()=>{$("#updBtn").textContent="Lädt …";$("#updBtn").disabled=true;HOST&&HOST.postMessage(JSON.stringify({id:"upd",typ:"update_installieren"}))};
 const autoSw=$("#autoSw");autoSw.setAttribute("aria-checked",store.get("luigi-auto")!=="off");
 autoSw.onclick=()=>{const on=autoSw.getAttribute("aria-checked")!=="true";autoSw.setAttribute("aria-checked",on);store.set("luigi-auto",on?"on":"off")};
+function teachBox(t){
+  const d=document.createElement("div");d.className="teach";
+  d.innerHTML='<b>Bring es mir bei</b><textarea rows="2" placeholder="So hättest du geantwortet …"></textarea><div class="trow"><button class="cbtn no" data-x="no">Lass gut sein</button><button class="cbtn yes" data-x="ok">Lernen</button></div>';
+  const ta=d.querySelector("textarea");ta.onkeydown=e=>{e.stopPropagation();if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();d.querySelector('[data-x="ok"]').click()}};
+  d.onclick=e=>{const b=e.target.closest("button");if(!b)return;
+    if(b.dataset.x==="ok"&&ta.value.trim()){EIGEN.add(t,ta.value.trim());toast("Gelernt! Frag mich nochmal.")}
+    d.remove()};
+  return d;
+}
 function syncModel(){
   $("#modelName").textContent=model.name;$("#modelDot").style.background=`var(${model.c})`;
   const st=$("#pcStatus");if(st){st.textContent=HOST?"Verbunden":"Nur in der App";st.classList.toggle("ok",!!HOST)}
@@ -1362,7 +1418,7 @@ $("#wKey").onkeydown=e=>{e.stopPropagation();if(e.key==="Enter")$("#wGo").click(
 $("#wName").onkeydown=e=>{e.stopPropagation();if(e.key==="Enter")$("#wKey").focus()};
 if(!store.get("luigi-start")&&!MODELS.some(x=>x.prov&&hasKey(x))){wel.classList.add("open");setTimeout(()=>$("#wName").focus(),400)}
 
-window.LUIGI={askRaw,system,parseActions,md,esc,card,cardsHTML,autoRun,toast,store,HOST,SPARK,IC,ACTIONS_HELP,getModel:()=>model,hasAnyKey:()=>MODELS.some(x=>x.prov&&hasKey(x))};
+window.LUIGI={askRaw,teachBox,system,parseActions,md,esc,card,cardsHTML,autoRun,toast,store,HOST,SPARK,IC,ACTIONS_HELP,getModel:()=>model,hasAnyKey:()=>MODELS.some(x=>x.prov&&hasKey(x))};
 renderRecents();setState();
 setTimeout(()=>input.focus({preventScroll:true}),400);
 })();
@@ -1921,6 +1977,256 @@ function look(){
 requestAnimationFrame(look);
 (function blink(){setTimeout(()=>{eyes.classList.add("blink");setTimeout(()=>eyes.classList.remove("blink"),140);blink()},2600+Math.random()*3400)})();
 m.addEventListener("click",()=>{m.classList.remove("jump");void m.offsetWidth;m.classList.add("jump");if(window.FX)FX.confetti(m)});
+})();
+
+</script>
+<script>
+/* ================= Luigi Eigen 0.0.0.1 – die eigene kleine KI ================= */
+window.EIGEN=(()=>{
+const VER="0.0.0.1",DIM=2048,H=32;
+const L=()=>window.LUIGI;
+let D={lessons:[],epochs:0,loss:1,runs:0};
+try{const r=JSON.parse(localStorage.getItem("luigi-eigen")||"null");if(r&&Array.isArray(r.lessons))D=Object.assign(D,r)}catch(e){}
+let W1,b1,W2,b2,classes=[],ready=false,training=false;
+const save=()=>{try{localStorage.setItem("luigi-eigen",JSON.stringify(D))}catch(e){}};
+
+/* ---- Wörter in Zahlen verwandeln (mit Tippfehler-Toleranz über Dreiergruppen) ---- */
+function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0)%DIM}
+function feats(text){
+  const t=String(text||"").toLowerCase().replace(/[^\wäöüß]+/g," ").trim();
+  if(!t)return [];
+  const words=t.split(/\s+/).filter(Boolean),f=new Map();
+  const put=(k,v)=>f.set(hash(k),(f.get(hash(k))||0)+v);
+  words.forEach((w,i)=>{
+    put("w:"+w,1);
+    if(i)put("b:"+words[i-1]+"_"+w,.6);
+    const p="#"+w+"#";for(let j=0;j+3<=p.length;j++)put("c:"+p.slice(j,j+3),.45);
+  });
+  const out=[...f.entries()];
+  const norm=Math.sqrt(out.reduce((a,[,v])=>a+v*v,0))||1;
+  return out.map(([i,v])=>[i,v/norm]);
+}
+function build(){
+  classes=[];const map=new Map();
+  D.lessons.forEach(l=>{const k=l.a.trim();if(!map.has(k)){map.set(k,classes.length);classes.push(k)}l.c=map.get(k)});
+  const N=classes.length;if(!N)return false;
+  const rnd=()=>(Math.random()*2-1)*.3;
+  W1=new Float32Array(DIM*H);for(let i=0;i<W1.length;i++)W1[i]=rnd()*.5;
+  b1=new Float32Array(H);W2=new Float32Array(H*N);for(let i=0;i<W2.length;i++)W2[i]=rnd();
+  b2=new Float32Array(N);return true;
+}
+function fwd(x){
+  const h=new Float32Array(H);
+  for(let k=0;k<H;k++){let s=b1[k];for(const [i,v] of x)s+=W1[i*H+k]*v;h[k]=Math.tanh(s)}
+  const N=classes.length,o=new Float32Array(N);let mx=-1e9;
+  for(let c=0;c<N;c++){let s=b2[c];for(let k=0;k<H;k++)s+=W2[k*N+c]*h[k];o[c]=s;if(s>mx)mx=s}
+  let sum=0;for(let c=0;c<N;c++){o[c]=Math.exp(o[c]-mx);sum+=o[c]}
+  for(let c=0;c<N;c++)o[c]/=sum;
+  return {h,o};
+}
+/* ---- Lernen: echtes Training mit Rückmeldung, in kleinen Häppchen ---- */
+function train(onStep){
+  return new Promise(res=>{
+    if(training||!D.lessons.length)return res(false);
+    training=true;
+    if(!build()){training=false;return res(false)}
+    const data=D.lessons.map(l=>({x:feats(l.q),c:l.c})).filter(d=>d.x.length);
+    if(!data.length){training=false;return res(false)}
+    const N=classes.length,EP=Math.min(400,Math.max(140,40*classes.length)),curve=[];
+    let ep=0;
+    const step=()=>{
+      const t0=performance.now();
+      while(ep<EP&&performance.now()-t0<24){
+        const lr=.12*Math.pow(.993,ep);let loss=0;
+        for(let s=data.length-1;s>0;s--){const j=(Math.random()*(s+1))|0;[data[s],data[j]]=[data[j],data[s]]}
+        for(const d of data){
+          const {h,o}=fwd(d.x);
+          loss+=-Math.log(Math.max(1e-9,o[d.c]));
+          const dh=new Float32Array(H);
+          for(let c=0;c<N;c++){const g=o[c]-(c===d.c?1:0);if(!g)continue;
+            for(let k=0;k<H;k++){dh[k]+=W2[k*N+c]*g;W2[k*N+c]-=lr*g*h[k]}
+            b2[c]-=lr*g}
+          for(let k=0;k<H;k++){const g=dh[k]*(1-h[k]*h[k]);if(!g)continue;
+            for(const [i,v] of d.x)W1[i*H+k]-=lr*g*v;
+            b1[k]-=lr*g}
+        }
+        D.loss=loss/data.length;curve.push(D.loss);ep++;
+      }
+      if(onStep)onStep(ep/EP,D.loss,curve);
+      if(ep<EP)setTimeout(step,0);
+      else{D.epochs=EP;D.runs=(D.runs||0)+1;ready=true;training=false;save();res(true)}
+    };
+    step();
+  });
+}
+/* ---- Eingebaute Grundfähigkeiten, die niemand beibringen muss ---- */
+function basic(t){
+  const s=t.toLowerCase();
+  if(/^\s*[-+(]?[\d\s.,+\-*/x:()^]+=?\s*$/.test(s)&&/[\d]/.test(s)&&/[+\-*/x:^]/.test(s)){
+    try{const e=s.replace(/,/g,".").replace(/x/g,"*").replace(/:/g,"/").replace(/\^/g,"**").replace(/=/g,"");
+      if(/^[\d\s.+\-*/()**]+$/.test(e)){const v=Function('"use strict";return('+e+")")();
+        if(Number.isFinite(v))return "Das sind **"+(Math.round(v*1e6)/1e6)+"**."}}catch(e){}
+  }
+  if(/wie spät|uhrzeit|wie viel uhr/.test(s))return "Es ist **"+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+"** Uhr.";
+  if(/welcher tag|welches datum|den wievielten/.test(s))return "Heute ist **"+new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+"**.";
+  if(/wie heißt du|wer bist du/.test(s))return "Ich bin **Luigi Eigen**, Version "+VER+". Deine eigene kleine KI – alles, was ich kann, hast du mir beigebracht.";
+  if(/^(münze|muenze|kopf oder zahl)/.test(s))return Math.random()<.5?"**Kopf**":"**Zahl**";
+  if(/würfel|wuerfel/.test(s))return "Ich würfle … **"+(1+Math.floor(Math.random()*6))+"**.";
+  return null;
+}
+/* ---- Antworten ---- */
+function reply(text){
+  const via=`Luigi Eigen ${VER}`;
+  const b=basic(text);if(b)return {t:b,via};
+  if(!D.lessons.length)return {t:`Ich bin **Luigi Eigen ${VER}** und noch ganz frisch – ich weiß wirklich **nichts**. Alles, was ich kann, musst du mir beibringen. Schreib einfach unten rein, wie ich hätte antworten sollen, oder geh links auf **Schule**.`,via,teach:text};
+  if(!ready&&!build())return {t:"Mein Gehirn ist noch leer.",via,teach:text};
+  if(!ready)return {t:"Einen Moment, ich lerne gerade noch. Frag mich gleich nochmal.",via};
+  const x=feats(text);
+  if(!x.length)return {t:"Das habe ich nicht verstanden.",via,teach:text};
+  const {o}=fwd(x);
+  let best=0;for(let c=1;c<o.length;c++)if(o[c]>o[best])best=c;
+  let p=o[best];
+  const STOP=new Set("was ist sind war der die das den dem des ein eine einen einem eines und oder aber wie wer wen wem wann warum wieso weshalb wohin woher kannst kann kannst du dir mir mich dich ich mal bitte doch noch denn also vielleicht etwas mehr sehr ganz schon hast habe haben wird werden sein ihr ihre dein deine mein meine für mit von bei auf aus nach über unter dass weil wenn".split(" "));
+  const words=w=>new Set(String(w).toLowerCase().replace(/[^\wäöüß]+/g," ").split(/\s+/).filter(x=>x.length>2&&!STOP.has(x)));
+  const inw=words(text),mine=new Set();
+  D.lessons.filter(l=>l.c===best).forEach(l=>words(l.q).forEach(w=>mine.add(w)));
+  const near=(a,b)=>a===b||(a.length>3&&b.length>3&&(a.startsWith(b.slice(0,4))||b.startsWith(a.slice(0,4))||a.includes(b)||b.includes(a)));
+  let overlap=0;inw.forEach(w=>{for(const m of mine)if(near(w,m)){overlap++;break}});
+  if(inw.size&&!overlap&&p<.97)p=Math.min(p,.3);
+  if(p<.45){
+    const cand=D.lessons.map(l=>{const lw=words(l.q);let hit=0;inw.forEach(w=>{for(const m of lw)if(near(w,m)){hit++;break}});
+      return {l,s:lw.size?hit/Math.max(inw.size,lw.size):0}}).sort((a,b)=>b.s-a.s)[0];
+    if(cand&&cand.s>=.5&&inw.size)return {t:cand.l.a,via:via+" · geraten"};
+    return {t:`Das weiß ich noch nicht. Ich bin erst bei **${D.lessons.length} Lektionen** – bring es mir bei, dann kann ich es für immer.`,via,teach:text};
+  }
+  const ans=classes[best];
+  return {t:ans,via:`${via} · ${Math.round(p*100)} % sicher`};
+}
+function add(q,a){
+  q=String(q||"").trim().slice(0,300);a=String(a||"").trim().slice(0,2000);
+  if(!q||!a)return false;
+  const ex=D.lessons.find(l=>l.q.toLowerCase()===q.toLowerCase());
+  if(ex)ex.a=a;else D.lessons.push({q,a});
+  if(D.lessons.length>600)D.lessons=D.lessons.slice(-600);
+  save();ready=false;train(null).then(()=>window.dispatchEvent(new Event("eigen")));
+  return true;
+}
+function del(i){D.lessons.splice(i,1);save();ready=false;if(D.lessons.length)train(null).then(()=>window.dispatchEvent(new Event("eigen")));else window.dispatchEvent(new Event("eigen"))}
+function stats(){return {ver:VER,lessons:D.lessons.length,answers:new Set(D.lessons.map(l=>l.a)).size,loss:D.loss,runs:D.runs||0,ready,training}}
+if(D.lessons.length)setTimeout(()=>train(null).then(()=>window.dispatchEvent(new Event("eigen"))),400);
+return {VER,reply,add,del,train,stats,lessons:()=>D.lessons,data:()=>D,load(j){if(j&&Array.isArray(j.lessons)){D.lessons=j.lessons.filter(l=>l&&l.q&&l.a).slice(0,600);save();ready=false;train(null).then(()=>window.dispatchEvent(new Event("eigen")));return true}return false}};
+})();
+
+/* ================= Schule: hier bringst du Luigi Eigen alles bei ================= */
+(()=>{
+const $=s=>document.querySelector(s);const L=window.LUIGI;if(!L)return;
+const main=$("#main");
+const btn=document.createElement("button");btn.className="new-chat press plan-btn";btn.id="schoolBtn";btn.title="Luigi Eigen beibringen";
+btn.innerHTML='<svg class="ico" viewBox="0 0 24 24" style="flex:none"><path d="M12 4 2 9l10 5 10-5z"/><path d="M6 11.5V17c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/></svg><span class="label">Schule</span>';
+$("#planBtn").after(btn);
+const view=document.createElement("section");view.className="school";view.id="school";view.innerHTML=`
+  <div class="scol">
+    <div class="shead"><svg class="spark" aria-hidden="true"><use href="#spark"/></svg>
+      <div><b>Luigi Eigen</b><i id="sver">Version 0.0.0.1</i></div>
+      <button class="mini press" id="sExit" aria-label="Zurück"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="scards" id="sStats"></div>
+    <div class="sbox">
+      <b>Neue Lektion</b>
+      <input id="sQ" placeholder="Wenn ich das sage …" autocomplete="off">
+      <textarea id="sA" rows="2" placeholder="… antwortest du das"></textarea>
+      <div class="trow"><span class="keys-note">Mehrere Fragen zur selben Antwort machen mich schlauer.</span><button class="cbtn yes" id="sAdd">Beibringen</button></div>
+    </div>
+    <div class="sbox">
+      <b>Ausprobieren</b>
+      <input id="sT" placeholder="Frag mich etwas …" autocomplete="off">
+      <div class="stest" id="sOut">Noch nichts gefragt.</div>
+    </div>
+    <div class="sbox">
+      <b>Training</b>
+      <canvas id="sCurve" width="560" height="90"></canvas>
+      <div class="sbar"><i id="sBar"></i></div>
+      <div class="trow"><span class="keys-note" id="sNote">Ich lerne automatisch, wenn du mir etwas beibringst.</span><button class="cbtn no" id="sTrain">Nochmal trainieren</button></div>
+    </div>
+    <div class="sbox">
+      <b>Gehirn sichern</b>
+      <div class="trow" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="cbtn no" id="sExp">Speichern</button>
+        <button class="cbtn no" id="sImp">Laden</button>
+        <button class="cbtn no" id="sWipe">Alles vergessen</button>
+      </div>
+    </div>
+  </div>
+  <aside class="slist">
+    <div class="shead2"><b>Gelernt</b><input id="sSearch" placeholder="Suchen" autocomplete="off"></div>
+    <div class="sitems" id="sItems"></div>
+  </aside>`;
+$("#main").querySelector(".body").before(view);
+const imp=document.createElement("input");imp.type="file";imp.accept=".json,.luigi,application/json";imp.hidden=true;document.body.appendChild(imp);
+
+let q="";
+function renderStats(){
+  const s=EIGEN.stats();
+  $("#sver").textContent="Version "+s.ver+(s.training?" · lernt gerade":s.ready?" · bereit":" · noch nicht trainiert");
+  const fit=s.lessons?Math.max(0,Math.min(100,Math.round(100-s.loss*45))):0;
+  $("#sStats").innerHTML=[["Lektionen",s.lessons],["Antworten",s.answers],["Trainings",s.runs],["Fitness",fit+" %"]]
+    .map(([k,v])=>`<div class="scard"><b>${v}</b><span>${k}</span></div>`).join("");
+}
+function renderItems(){
+  const l=EIGEN.lessons().map((x,i)=>({x,i})).filter(({x})=>!q||(x.q+" "+x.a).toLowerCase().includes(q)).reverse();
+  $("#sItems").innerHTML=l.length?l.map(({x,i})=>`<div class="sitem"><div><b>${L.esc(x.q)}</b><span>${L.esc(x.a)}</span></div><button data-i="${i}" aria-label="Vergessen">×</button></div>`).join("")
+    :`<div class="rempty">${q?"Nichts gefunden":"Noch nichts gelernt. Fang links an!"}</div>`;
+}
+function curve(c,prog){
+  const cv=$("#sCurve"),ctx=cv.getContext("2d"),w=cv.width,h=cv.height;
+  ctx.clearRect(0,0,w,h);if(!c||c.length<2)return;
+  const mx=Math.max(...c),mn=Math.min(...c),sp=Math.max(.001,mx-mn);
+  const cs=getComputedStyle(document.documentElement),g1=cs.getPropertyValue("--g1").trim(),g2=cs.getPropertyValue("--g2").trim();
+  const gr=ctx.createLinearGradient(0,0,w,0);gr.addColorStop(0,g2);gr.addColorStop(1,g1);
+  ctx.beginPath();c.forEach((v,i)=>{const x=i/(c.length-1)*w,y=h-4-((v-mn)/sp)*(h-14);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+  ctx.strokeStyle=gr;ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.stroke();
+  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.globalAlpha=.12;ctx.fillStyle=g1;ctx.fill();ctx.globalAlpha=1;
+}
+async function doTrain(){
+  const bar=$("#sBar"),note=$("#sNote");
+  if(!EIGEN.lessons().length){L.toast("Bring mir erst etwas bei");return}
+  note.textContent="Ich lerne …";
+  await EIGEN.train((p,loss,c)=>{bar.style.width=(p*100).toFixed(1)+"%";curve(c,p);renderStats()});
+  bar.style.width="100%";note.textContent="Fertig gelernt.";renderStats();
+  setTimeout(()=>{bar.style.width="0%";note.textContent="Ich lerne automatisch, wenn du mir etwas beibringst."},1800);
+}
+$("#sAdd").onclick=()=>{const a=$("#sQ"),b=$("#sA");
+  if(!a.value.trim()||!b.value.trim())return L.toast("Beides ausfüllen");
+  EIGEN.add(a.value,b.value);a.value="";b.value="";a.focus();L.toast("Gelernt");renderStats();renderItems()};
+$("#sT").onkeydown=e=>{e.stopPropagation();if(e.key!=="Enter")return;
+  const r=EIGEN.reply($("#sT").value);$("#sOut").innerHTML=L.md(r.t)+`<div class="svia">${L.esc(r.via||"")}</div>`};
+$("#sQ").onkeydown=e=>{e.stopPropagation();if(e.key==="Enter")$("#sA").focus()};
+$("#sA").onkeydown=e=>{e.stopPropagation();if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#sAdd").click()}};
+$("#sSearch").oninput=e=>{q=e.target.value.trim().toLowerCase();renderItems()};
+$("#sSearch").onkeydown=e=>e.stopPropagation();
+$("#sItems").onclick=e=>{const b=e.target.closest("button");if(!b)return;EIGEN.del(+b.dataset.i);renderStats();renderItems()};
+$("#sTrain").onclick=doTrain;
+$("#sExp").onclick=async()=>{
+  const json=JSON.stringify({luigi:"eigen",ver:EIGEN.VER,lessons:EIGEN.lessons()},null,1);
+  if(L.HOST){const r=await new Promise(res=>{const id="x"+Date.now();const h=e=>{if((e.data||{}).id===id){L.HOST.removeEventListener("message",h);res(e.data)}};L.HOST.addEventListener("message",h);
+    L.HOST.postMessage(JSON.stringify({id,typ:"datei_erstellen",ort:"Dokumente",name:"Luigi/luigi-gehirn.json",inhalt:json}))});
+    L.toast(r&&r.ok?"Gesichert in Dokumente › Luigi":"Hat nicht geklappt")}
+  else{try{await navigator.clipboard.writeText(json);L.toast("Gehirn in die Zwischenablage kopiert")}catch(e){L.toast("Kopieren ging nicht")}}};
+$("#sImp").onclick=()=>imp.click();
+imp.onchange=async()=>{const f=imp.files[0];imp.value="";if(!f)return;
+  try{const ok=EIGEN.load(JSON.parse(await f.text()));L.toast(ok?"Gehirn geladen":"Die Datei passt nicht");renderStats();renderItems()}catch(e){L.toast("Die Datei passt nicht")}};
+let armed=false;
+$("#sWipe").onclick=e=>{if(!armed){armed=true;e.target.textContent="Wirklich alles?";setTimeout(()=>{armed=false;e.target.textContent="Alles vergessen"},2500);return}
+  EIGEN.load({lessons:[]});armed=false;e.target.textContent="Alles vergessen";L.toast("Luigi Eigen weiß wieder nichts");renderStats();renderItems()};
+addEventListener("eigen",()=>{renderStats();renderItems()});
+
+function open_(){main.classList.add("schooling");main.classList.remove("planning");btn.classList.add("on");$("#planBtn").classList.remove("on");renderStats();renderItems();setTimeout(()=>$("#sQ").focus(),200)}
+function close_(){main.classList.remove("schooling");btn.classList.remove("on")}
+btn.onclick=()=>main.classList.contains("schooling")?close_():open_();
+$("#sExit").onclick=close_;
+$("#planBtn").addEventListener("click",close_);
+$("#newChat").addEventListener("click",close_);
+$("#recents").addEventListener("click",close_);
+renderStats();renderItems();
 })();
 
 </script>
